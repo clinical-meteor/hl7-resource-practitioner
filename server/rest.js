@@ -158,8 +158,14 @@ JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
       delete req.body.id;
       delete req.body.meta;
 
+      //process.env.TRACE && console.log('req.body', req.body);
+
       practitionerUpdate.resourceType = "Practitioner";
       practitionerUpdate = Practitioners.toMongo(practitionerUpdate);
+
+      //process.env.TRACE && console.log('practitionerUpdate', practitionerUpdate);
+
+
       practitionerUpdate = Practitioners.prepForUpdate(practitionerUpdate);
 
 
@@ -167,41 +173,76 @@ JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
       process.env.DEBUG && console.log('practitionerUpdate', JSON.stringify(practitionerUpdate, null, 2));
       // process.env.DEBUG && console.log('newPractitioner', newPractitioner);
 
-      var practitionerId = Practitioners.update({_id: req.params.id}, {$set: practitionerUpdate },  function(error, result){
-        if (error) {
-          //console.log('PUT /fhir/Practitioner/' + req.params.id + "[error]", error);
-          JsonRoutes.sendResult(res, {
-            code: 400
-          });
-        }
-        if (result) {
-          process.env.TRACE && console.log('result', result);
-          res.setHeader("Location", "fhir/Practitioner/" + result);
-          res.setHeader("Last-Modified", new Date());
-          res.setHeader("ETag", "1.6.0");
+      var practitioner = Practitioners.findOne(req.params.id);
+      var practitionerId;
 
-          var practitioners = Practitioners.find({_id: req.params.id});
-          var payload = [];
+      if(practitioner){
+        process.env.DEBUG && console.log('Practitioner found...')
+        practitionerId = Practitioners.update({_id: req.params.id}, {$set: practitionerUpdate },  function(error, result){
+          if (error) {
+            //console.log('PUT /fhir/Practitioner/' + req.params.id + "[error]", error);
+            JsonRoutes.sendResult(res, {
+              code: 400
+            });
+          }
+          if (result) {
+            process.env.TRACE && console.log('result', result);
+            res.setHeader("Location", "fhir/Practitioner/" + result);
+            res.setHeader("Last-Modified", new Date());
+            res.setHeader("ETag", "1.6.0");
 
-          practitioners.forEach(function(record){
-            payload.push(Practitioners.prepForFhirTransfer(record));
-          });
+            var practitioners = Practitioners.find({_id: req.params.id});
+            var payload = [];
 
-          console.log("payload", payload);
+            practitioners.forEach(function(record){
+              payload.push(Practitioners.prepForFhirTransfer(record));
+            });
 
-          JsonRoutes.sendResult(res, {
-            code: 200,
-            data: Bundle.generate(payload)
-          });
-        }
-      });
+            console.log("payload", payload);
+
+            JsonRoutes.sendResult(res, {
+              code: 200,
+              data: Bundle.generate(payload)
+            });
+          }
+        });
+      } else {        
+        process.env.DEBUG && console.log('No practitioner found.  Creating one.')
+        practitionerId = Practitioners.insert(practitionerUpdate,  function(error, result){
+          if (error) {
+            process.env.TRACE && console.log('PUT /fhir/Practitioner/' + req.params.id + "[error]", error);
+            JsonRoutes.sendResult(res, {
+              code: 400
+            });
+          }
+          if (result) {
+            process.env.TRACE && console.log('result', result);
+            res.setHeader("Location", "fhir/Practitioner/" + result);
+            res.setHeader("Last-Modified", new Date());
+            res.setHeader("ETag", "1.6.0");
+
+            var practitioners = Practitioners.find({_id: req.params.id});
+            var payload = [];
+
+            practitioners.forEach(function(record){
+              payload.push(Practitioners.prepForFhirTransfer(record));
+            });
+
+            console.log("payload", payload);
+
+            JsonRoutes.sendResult(res, {
+              code: 200,
+              data: Bundle.generate(payload)
+            });
+          }
+        });        
+      }
     } else {
       JsonRoutes.sendResult(res, {
         code: 422
       });
 
     }
-
 
 
   } else {
