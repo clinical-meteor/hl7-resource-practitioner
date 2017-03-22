@@ -1,11 +1,21 @@
+
+
+//==========================================================================================
+// Global Configs  
+
 JsonRoutes.Middleware.use(
   '/api/*',
   oAuth2Server.oauthserver.authorise()   // OAUTH FLOW - A7.1
 );
 
+JsonRoutes.setResponseHeaders({
+  "content-type": "application/fhir+json"
+});
 
 
 
+//==========================================================================================
+// Global Method Overrides
 
 // this is temporary fix until PR 132 can be merged in
 // https://github.com/stubailo/meteor-rest/pull/132
@@ -37,108 +47,12 @@ JsonRoutes.sendResult = function (res, options) {
   res.end();
 };
 
-JsonRoutes.setResponseHeaders({
-  "content-type": "application/fhir+json"
-});
 
 
-JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.params.id);
 
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("content-type", "application/fhir+json");
+//==========================================================================================
+// Step 1 - Create New Practitioner  
 
-  var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
-  var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
-
-  if (accessToken || process.env.NOAUTH || Meteor.settings.private.disableOauth) {
-
-    if (accessToken) {
-      process.env.TRACE && console.log('accessToken', accessToken);
-      process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
-    }
-
-    // if (typeof SiteStatistics === "object") {
-    //   SiteStatistics.update({_id: "configuration"}, {$inc:{
-    //     "Practitioners.count.read": 1
-    //   }});
-    // }
-
-    var practitionerData = Practitioners.findOne({_id: req.params.id});
-    if (practitionerData) {
-      practitionerData.id = practitionerData._id;
-
-      delete practitionerData._document;
-      delete practitionerData._id;
-
-      process.env.TRACE && console.log('practitionerData', practitionerData);
-
-      JsonRoutes.sendResult(res, {
-        code: 200,
-        data: Practitioners.prepForFhirTransfer(practitionerData)
-      });
-    } else {
-      JsonRoutes.sendResult(res, {
-        code: 410
-      });
-    }
-  } else {
-    JsonRoutes.sendResult(res, {
-      code: 401
-    });
-  }
-});
-
-
-JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, res, next) {
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.params.id);
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.query._count);
-
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("content-type", "application/fhir+json");
-
-  var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
-  var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
-
-  if (accessToken || process.env.NOAUTH || Meteor.settings.private.disableOauth) {
-
-    if (accessToken) {
-      process.env.TRACE && console.log('accessToken', accessToken);
-      process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
-    }
-
-    // if (typeof SiteStatistics === "object") {
-    //   SiteStatistics.update({_id: "configuration"}, {$inc:{
-    //     "Practitioners.count.read": 1
-    //   }});
-    // }
-
-    var practitioners = Practitioners.find({_id: req.params.id});
-    var payload = [];
-
-    practitioners.forEach(function(record){
-      payload.push(Practitioners.prepForFhirTransfer(record));
-
-      // the following is a hack, to conform to the Touchstone Practitioner testscript
-      // https://touchstone.aegis.net/touchstone/testscript?id=06313571dea23007a12ec7750a80d98ca91680eca400b5215196cd4ae4dcd6da&name=%2fFHIR1-6-0-Basic%2fP-R%2fPractitioner%2fClient+Assigned+Id%2fPractitioner-client-id-json&version=1&latestVersion=1&itemId=&spec=HL7_FHIR_STU3_C2
-      // the _history query expects a different resource in the Bundle for each version of the file in the system
-      // since we don't implement record versioning in Meteor on FHIR yet
-      // we are simply adding two instances of the record to the payload 
-      payload.push(Practitioners.prepForFhirTransfer(record));
-    });
-
-    JsonRoutes.sendResult(res, {
-      code: 200,
-      data: Bundle.generate(payload, 'history')
-    });
-  } else {
-    JsonRoutes.sendResult(res, {
-      code: 401
-    });
-  }
-});
-
-// Step 1
 JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
   process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.params.id);
   process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.query._count);
@@ -265,6 +179,242 @@ JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
 });
 
 
+
+//==========================================================================================
+// Step 2 - Read Practitioner  
+
+JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
+  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.params.id);
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
+
+  var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
+  var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
+
+  if (accessToken || process.env.NOAUTH || Meteor.settings.private.disableOauth) {
+
+    if (accessToken) {
+      process.env.TRACE && console.log('accessToken', accessToken);
+      process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
+    }
+
+    // if (typeof SiteStatistics === "object") {
+    //   SiteStatistics.update({_id: "configuration"}, {$inc:{
+    //     "Practitioners.count.read": 1
+    //   }});
+    // }
+
+    var practitionerData = Practitioners.findOne({_id: req.params.id});
+    if (practitionerData) {
+      practitionerData.id = practitionerData._id;
+
+      delete practitionerData._document;
+      delete practitionerData._id;
+
+      process.env.TRACE && console.log('practitionerData', practitionerData);
+
+      JsonRoutes.sendResult(res, {
+        code: 200,
+        data: Practitioners.prepForFhirTransfer(practitionerData)
+      });
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 410
+      });
+    }
+  } else {
+    JsonRoutes.sendResult(res, {
+      code: 401
+    });
+  }
+});
+
+//==========================================================================================
+// Step 3 - Update Practitioner  
+
+JsonRoutes.add("post", "/fhir-1.6.0/Practitioner", function (req, res, next) {
+  //process.env.DEBUG && console.log('POST /fhir/Practitioner/', JSON.stringify(req.body, null, 2));
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
+
+  var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
+  var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
+
+  if (accessToken || process.env.NOAUTH || Meteor.settings.private.disableOauth) {
+
+    if (accessToken) {
+      process.env.TRACE && console.log('accessToken', accessToken);
+      process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
+    }
+
+    var practitionerId;
+    var newPractitioner;
+
+    if (req.body) {
+      newPractitioner = req.body;
+
+      // remove id and meta, if we're recycling a resource
+      delete newPractitioner.id;
+      delete newPractitioner.meta;
+
+      if (newPractitioner.birthDate) {
+        newPractitioner.birthDate = moment(newPractitioner.birthDate);
+      }
+
+      newPractitioner = Practitioners.toMongo(newPractitioner);
+
+      process.env.DEBUG && console.log('newPractitioner', JSON.stringify(newPractitioner, null, 2));
+      // process.env.DEBUG && console.log('newPractitioner', newPractitioner);
+
+      var practitionerId = Practitioners.insert(newPractitioner,  function(error, result){
+        if (error) {
+          JsonRoutes.sendResult(res, {
+            code: 400
+          });
+        }
+        if (result) {
+          process.env.TRACE && console.log('result', result);
+          res.setHeader("Location", "fhir-1.6.0/Practitioner/" + result);
+          res.setHeader("Last-Modified", new Date());
+          res.setHeader("ETag", "1.6.0");
+
+          var practitioners = Practitioners.find({_id: result});
+          var payload = [];
+
+          practitioners.forEach(function(record){
+            payload.push(Practitioners.prepForFhirTransfer(record));
+          });
+
+          //console.log("payload", payload);
+
+          JsonRoutes.sendResult(res, {
+            code: 201,
+            data: Bundle.generate(payload)
+          });
+        }
+      });
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 422
+      });
+
+    }
+
+  } else {
+    JsonRoutes.sendResult(res, {
+      code: 401
+    });
+  }
+});
+
+//==========================================================================================
+// Step 4 - PractitionerHistoryInstance
+
+JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, res, next) {
+  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.params.id);
+  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.query._count);
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
+
+  var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
+  var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
+
+  if (accessToken || process.env.NOAUTH || Meteor.settings.private.disableOauth) {
+
+    if (accessToken) {
+      process.env.TRACE && console.log('accessToken', accessToken);
+      process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
+    }
+
+    // if (typeof SiteStatistics === "object") {
+    //   SiteStatistics.update({_id: "configuration"}, {$inc:{
+    //     "Practitioners.count.read": 1
+    //   }});
+    // }
+
+    var practitioners = Practitioners.find({_id: req.params.id});
+    var payload = [];
+
+    practitioners.forEach(function(record){
+      payload.push(Practitioners.prepForFhirTransfer(record));
+
+      // the following is a hack, to conform to the Touchstone Practitioner testscript
+      // https://touchstone.aegis.net/touchstone/testscript?id=06313571dea23007a12ec7750a80d98ca91680eca400b5215196cd4ae4dcd6da&name=%2fFHIR1-6-0-Basic%2fP-R%2fPractitioner%2fClient+Assigned+Id%2fPractitioner-client-id-json&version=1&latestVersion=1&itemId=&spec=HL7_FHIR_STU3_C2
+      // the _history query expects a different resource in the Bundle for each version of the file in the system
+      // since we don't implement record versioning in Meteor on FHIR yet
+      // we are simply adding two instances of the record to the payload 
+      payload.push(Practitioners.prepForFhirTransfer(record));
+    });
+
+    JsonRoutes.sendResult(res, {
+      code: 200,
+      data: Bundle.generate(payload, 'history')
+    });
+  } else {
+    JsonRoutes.sendResult(res, {
+      code: 401
+    });
+  }
+});
+
+//==========================================================================================
+// Step 5 - Practitioner Version Read
+
+// NOTE:  We've not implemented _history functionality yet; so this endpoint is mostly a duplicate of Step 4.
+
+JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history/:versionId", function (req, res, next) {
+  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.params);
+  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.query._count);
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
+
+  var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
+  var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
+
+  if (accessToken || process.env.NOAUTH || Meteor.settings.private.disableOauth) {
+
+    if (accessToken) {
+      process.env.TRACE && console.log('accessToken', accessToken);
+      process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
+    }
+
+    // if (typeof SiteStatistics === "object") {
+    //   SiteStatistics.update({_id: "configuration"}, {$inc:{
+    //     "Practitioners.count.read": 1
+    //   }});
+    // }
+
+    var practitioners = Practitioners.find({_id: req.params.id});
+    var payload = [];
+
+    practitioners.forEach(function(record){
+      payload.push(Practitioners.prepForFhirTransfer(record));
+
+      // the following is a hack, to conform to the Touchstone Practitioner testscript
+      // https://touchstone.aegis.net/touchstone/testscript?id=06313571dea23007a12ec7750a80d98ca91680eca400b5215196cd4ae4dcd6da&name=%2fFHIR1-6-0-Basic%2fP-R%2fPractitioner%2fClient+Assigned+Id%2fPractitioner-client-id-json&version=1&latestVersion=1&itemId=&spec=HL7_FHIR_STU3_C2
+      // the _history query expects a different resource in the Bundle for each version of the file in the system
+      // since we don't implement record versioning in Meteor on FHIR yet
+      // we are simply adding two instances of the record to the payload 
+      payload.push(Practitioners.prepForFhirTransfer(record));
+    });
+
+    JsonRoutes.sendResult(res, {
+      code: 200,
+      data: Bundle.generate(payload, 'history')
+    });
+  } else {
+    JsonRoutes.sendResult(res, {
+      code: 401
+    });
+  }
+});
+
+
+
 generateDatabaseQuery = function(query){
   console.log("generateDatabaseQuery", query);
 
@@ -370,7 +520,9 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner", function (req, res, next) {
   }
 });
 
-// This is actually a search function
+//==========================================================================================
+// Step 6 - Practitioner Search Type  
+
 JsonRoutes.add("post", "/fhir-1.6.0/Practitioner/:param", function (req, res, next) {
   process.env.DEBUG && console.log('POST /fhir-1.6.0/Practitioner/' + JSON.stringify(req.query));
 
@@ -422,83 +574,9 @@ JsonRoutes.add("post", "/fhir-1.6.0/Practitioner/:param", function (req, res, ne
 
 
 
-JsonRoutes.add("post", "/fhir-1.6.0/Practitioner", function (req, res, next) {
-  //process.env.DEBUG && console.log('POST /fhir/Practitioner/', JSON.stringify(req.body, null, 2));
 
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("content-type", "application/fhir+json");
-
-  var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
-  var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
-
-  if (accessToken || process.env.NOAUTH || Meteor.settings.private.disableOauth) {
-
-    if (accessToken) {
-      process.env.TRACE && console.log('accessToken', accessToken);
-      process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
-    }
-
-    var practitionerId;
-    var newPractitioner;
-
-    if (req.body) {
-      newPractitioner = req.body;
-
-      // remove id and meta, if we're recycling a resource
-      delete newPractitioner.id;
-      delete newPractitioner.meta;
-
-      if (newPractitioner.birthDate) {
-        newPractitioner.birthDate = moment(newPractitioner.birthDate);
-      }
-
-      newPractitioner = Practitioners.toMongo(newPractitioner);
-
-      process.env.DEBUG && console.log('newPractitioner', JSON.stringify(newPractitioner, null, 2));
-      // process.env.DEBUG && console.log('newPractitioner', newPractitioner);
-
-      var practitionerId = Practitioners.insert(newPractitioner,  function(error, result){
-        if (error) {
-          JsonRoutes.sendResult(res, {
-            code: 400
-          });
-        }
-        if (result) {
-          process.env.TRACE && console.log('result', result);
-          res.setHeader("Location", "fhir-1.6.0/Practitioner/" + result);
-          res.setHeader("Last-Modified", new Date());
-          res.setHeader("ETag", "1.6.0");
-
-          var practitioners = Practitioners.find({_id: result});
-          var payload = [];
-
-          practitioners.forEach(function(record){
-            payload.push(Practitioners.prepForFhirTransfer(record));
-          });
-
-          //console.log("payload", payload);
-
-          JsonRoutes.sendResult(res, {
-            code: 201,
-            data: Bundle.generate(payload)
-          });
-        }
-      });
-    } else {
-      JsonRoutes.sendResult(res, {
-        code: 422
-      });
-
-    }
-
-  } else {
-    JsonRoutes.sendResult(res, {
-      code: 401
-    });
-  }
-});
-
-
+//==========================================================================================
+// Step 7 - Practitioner Delete    
 
 JsonRoutes.add("delete", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
   process.env.DEBUG && console.log('DELETE /fhir-1.6.0/Practitioner/' + req.params.id);
