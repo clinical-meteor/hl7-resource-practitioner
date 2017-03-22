@@ -129,6 +129,7 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, re
   }
 });
 
+// Step 1
 JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
   process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.params.id);
   process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.query._count);
@@ -207,7 +208,8 @@ JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
           }
         });
       } else {        
-        process.env.DEBUG && console.log('No practitioner found.  Creating one.')
+        process.env.DEBUG && console.log('No practitioner found.  Creating one.');
+        practitionerUpdate._id = req.params.id;
         practitionerId = Practitioners.insert(practitionerUpdate,  function(error, result){
           if (error) {
             process.env.TRACE && console.log('PUT /fhir/Practitioner/' + req.params.id + "[error]", error);
