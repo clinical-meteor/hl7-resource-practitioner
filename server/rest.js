@@ -46,6 +46,7 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
   process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.params.id);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
 
   var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
   var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
@@ -94,6 +95,7 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, re
   process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.query._count);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
 
   var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
   var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
@@ -116,6 +118,13 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, re
 
     practitioners.forEach(function(record){
       payload.push(Practitioners.prepForFhirTransfer(record));
+
+      // the following is a hack, to conform to the Touchstone Practitioner testscript
+      // https://touchstone.aegis.net/touchstone/testscript?id=06313571dea23007a12ec7750a80d98ca91680eca400b5215196cd4ae4dcd6da&name=%2fFHIR1-6-0-Basic%2fP-R%2fPractitioner%2fClient+Assigned+Id%2fPractitioner-client-id-json&version=1&latestVersion=1&itemId=&spec=HL7_FHIR_STU3_C2
+      // the _history query expects a different resource in the Bundle for each version of the file in the system
+      // since we don't implement record versioning in Meteor on FHIR yet
+      // we are simply adding two instances of the record to the payload 
+      payload.push(Practitioners.prepForFhirTransfer(record));
     });
 
     JsonRoutes.sendResult(res, {
@@ -135,6 +144,7 @@ JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
   process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.query._count);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
 
   var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
   var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
@@ -316,6 +326,7 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner", function (req, res, next) {
   // console.log('process.env.DEBUG', process.env.DEBUG);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
 
   var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
   var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
@@ -364,6 +375,7 @@ JsonRoutes.add("post", "/fhir-1.6.0/Practitioner/:param", function (req, res, ne
   process.env.DEBUG && console.log('POST /fhir-1.6.0/Practitioner/' + JSON.stringify(req.query));
 
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("content-type", "application/fhir+json");
 
   var accessTokenStr = (req.params && req.params.access_token) || (req.query && req.query.access_token);
   var accessToken = oAuth2Server.collections.accessToken.findOne({accessToken: accessTokenStr});
