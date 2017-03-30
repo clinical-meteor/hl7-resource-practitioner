@@ -55,7 +55,7 @@ JsonRoutes.sendResult = function (res, options) {
 
 JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
   process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.params.id);
-  process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.query._count);
+  //process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.query._count);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -234,7 +234,7 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
 // Step 3 - Update Practitioner  
 
 JsonRoutes.add("post", "/fhir-1.6.0/Practitioner", function (req, res, next) {
-  //process.env.DEBUG && console.log('POST /fhir/Practitioner/', JSON.stringify(req.body, null, 2));
+  process.env.DEBUG && console.log('POST /fhir/Practitioner/', JSON.stringify(req.body, null, 2));
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -255,21 +255,30 @@ JsonRoutes.add("post", "/fhir-1.6.0/Practitioner", function (req, res, next) {
     if (req.body) {
       newPractitioner = req.body;
 
+
       // remove id and meta, if we're recycling a resource
       delete newPractitioner.id;
       delete newPractitioner.meta;
 
-      if (newPractitioner.birthDate) {
-        newPractitioner.birthDate = moment(newPractitioner.birthDate);
-      }
 
       newPractitioner = Practitioners.toMongo(newPractitioner);
 
-      process.env.DEBUG && console.log('newPractitioner', JSON.stringify(newPractitioner, null, 2));
+      process.env.TRACE && console.log('newPractitioner', JSON.stringify(newPractitioner, null, 2));
       // process.env.DEBUG && console.log('newPractitioner', newPractitioner);
+
+      console.log('Cleaning new practitioner...')
+      PractitionerSchema.clean(newPractitioner);
+
+      var practionerContext = PractitionerSchema.newContext();
+      practionerContext.validate(newPractitioner)
+      console.log('New practitioner is valid:', practionerContext.isValid());
+      console.log('check', check(newPractitioner, PractitionerSchema))
+      
+
 
       var practitionerId = Practitioners.insert(newPractitioner,  function(error, result){
         if (error) {
+          process.env.TRACE && console.log('error', error);
           JsonRoutes.sendResult(res, {
             code: 400
           });
@@ -295,11 +304,11 @@ JsonRoutes.add("post", "/fhir-1.6.0/Practitioner", function (req, res, next) {
           });
         }
       });
+      console.log('practitionerId', practitionerId);
     } else {
       JsonRoutes.sendResult(res, {
         code: 422
       });
-
     }
 
   } else {
@@ -313,8 +322,8 @@ JsonRoutes.add("post", "/fhir-1.6.0/Practitioner", function (req, res, next) {
 // Step 4 - PractitionerHistoryInstance
 
 JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, res, next) {
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.params.id);
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.query._count);
+  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/', req.params);
+  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/', req.query._count);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -363,11 +372,11 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, re
 //==========================================================================================
 // Step 5 - Practitioner Version Read
 
-// NOTE:  We've not implemented _history functionality yet; so this endpoint is mostly a duplicate of Step 4.
+// NOTE:  We've not implemented _history functionality yet; so this endpoint is mostly a duplicate of Step 2.
 
 JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history/:versionId", function (req, res, next) {
   process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.params);
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.query._count);
+  //process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.query._count);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -382,30 +391,26 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history/:versionId", functi
       process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
     }
 
-    // if (typeof SiteStatistics === "object") {
-    //   SiteStatistics.update({_id: "configuration"}, {$inc:{
-    //     "Practitioners.count.read": 1
-    //   }});
-    // }
+    var practitionerData = Practitioners.findOne({_id: req.params.id});
+    if (practitionerData) {
+      
+      practitionerData.id = practitionerData._id;
 
-    var practitioners = Practitioners.find({_id: req.params.id});
-    var payload = [];
+      delete practitionerData._document;
+      delete practitionerData._id;
 
-    practitioners.forEach(function(record){
-      payload.push(Practitioners.prepForFhirTransfer(record));
+      process.env.TRACE && console.log('practitionerData', practitionerData);
 
-      // the following is a hack, to conform to the Touchstone Practitioner testscript
-      // https://touchstone.aegis.net/touchstone/testscript?id=06313571dea23007a12ec7750a80d98ca91680eca400b5215196cd4ae4dcd6da&name=%2fFHIR1-6-0-Basic%2fP-R%2fPractitioner%2fClient+Assigned+Id%2fPractitioner-client-id-json&version=1&latestVersion=1&itemId=&spec=HL7_FHIR_STU3_C2
-      // the _history query expects a different resource in the Bundle for each version of the file in the system
-      // since we don't implement record versioning in Meteor on FHIR yet
-      // we are simply adding two instances of the record to the payload 
-      payload.push(Practitioners.prepForFhirTransfer(record));
-    });
+      JsonRoutes.sendResult(res, {
+        code: 200,
+        data: Practitioners.prepForFhirTransfer(practitionerData)
+      });
+    } else {
+      JsonRoutes.sendResult(res, {
+        code: 410
+      });
+    }
 
-    JsonRoutes.sendResult(res, {
-      code: 200,
-      data: Bundle.generate(payload, 'history')
-    });
   } else {
     JsonRoutes.sendResult(res, {
       code: 401
