@@ -1,6 +1,6 @@
 Package.describe({
   name: 'clinical:hl7-resource-practitioner',
-  version: '1.6.9',
+  version: '1.6.11',
   summary: 'HL7 FHIR Resource - Practitioner',
   git: 'https://github.com/clinical-meteor/hl7-resource-practitioner',
   documentation: 'README.md'
@@ -15,7 +15,7 @@ Package.onUse(function (api) {
   api.use('aldeed:collection2@2.5.0');
 
   api.use('simple:json-routes@2.1.0');
-  api.use('clinical:fhir-vault-server@0.0.3', ['client', 'server'], {weak: true});
+  api.use('clinical:fhir-vault-server@0.0.3', ['client', 'server'],{weak: true});
 
   api.use('clinical:extended-api@2.2.2');
   api.use('clinical:base-model@1.3.5');
