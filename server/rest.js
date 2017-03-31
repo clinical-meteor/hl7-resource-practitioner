@@ -4,10 +4,13 @@
 // Global Configs  
 
 
+var fhirVersion = 'fhir-3.0.0';
+
 if(typeof oAuth2Server === 'object'){
   // TODO:  double check that this is needed; and that the /api/ route is correct
   JsonRoutes.Middleware.use(
-    '/api/*',
+    // '/api/*',
+    '/fhir-3.0.0/*',
     oAuth2Server.oauthserver.authorise()   // OAUTH FLOW - A7.1
   );
 }
@@ -57,7 +60,7 @@ JsonRoutes.sendResult = function (res, options) {
 //==========================================================================================
 // Step 1 - Create New Practitioner  
 
-JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
+JsonRoutes.add("put", "/" + fhirVersion + "/Practitioner/:id", function (req, res, next) {
   process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.params.id);
   //process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.query._count);
 
@@ -203,7 +206,7 @@ JsonRoutes.add("put", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
 //==========================================================================================
 // Step 2 - Read Practitioner  
 
-JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
+JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner/:id", function (req, res, next) {
   process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.params.id);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -257,7 +260,7 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) 
 //==========================================================================================
 // Step 3 - Update Practitioner  
 
-JsonRoutes.add("post", "/fhir-1.6.0/Practitioner", function (req, res, next) {
+JsonRoutes.add("post", "/" + fhirVersion + "/Practitioner", function (req, res, next) {
   process.env.DEBUG && console.log('POST /fhir/Practitioner/', JSON.stringify(req.body, null, 2));
 
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -356,7 +359,7 @@ JsonRoutes.add("post", "/fhir-1.6.0/Practitioner", function (req, res, next) {
 //==========================================================================================
 // Step 4 - PractitionerHistoryInstance
 
-JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, res, next) {
+JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner/:id/_history", function (req, res, next) {
   process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/', req.params);
   process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/', req.query._count);
 
@@ -411,7 +414,7 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history", function (req, re
 
 // NOTE:  We've not implemented _history functionality yet; so this endpoint is mostly a duplicate of Step 2.
 
-JsonRoutes.add("get", "/fhir-1.6.0/Practitioner/:id/_history/:versionId", function (req, res, next) {
+JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner/:id/_history/:versionId", function (req, res, next) {
   process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.params);
   //process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.query._count);
 
@@ -521,7 +524,7 @@ generateDatabaseQuery = function(query){
   return databaseQuery;
 }
 
-JsonRoutes.add("get", "/fhir-1.6.0/Practitioner", function (req, res, next) {
+JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner", function (req, res, next) {
   process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner', req.query);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -569,7 +572,7 @@ JsonRoutes.add("get", "/fhir-1.6.0/Practitioner", function (req, res, next) {
 //==========================================================================================
 // Step 6 - Practitioner Search Type  
 
-JsonRoutes.add("post", "/fhir-1.6.0/Practitioner/:param", function (req, res, next) {
+JsonRoutes.add("post", "/" + fhirVersion + "/Practitioner/:param", function (req, res, next) {
   process.env.DEBUG && console.log('POST /fhir-1.6.0/Practitioner/' + JSON.stringify(req.query));
 
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -633,7 +636,7 @@ JsonRoutes.add("post", "/fhir-1.6.0/Practitioner/:param", function (req, res, ne
 //==========================================================================================
 // Step 7 - Practitioner Delete    
 
-JsonRoutes.add("delete", "/fhir-1.6.0/Practitioner/:id", function (req, res, next) {
+JsonRoutes.add("delete", "/" + fhirVersion + "/Practitioner/:id", function (req, res, next) {
   process.env.DEBUG && console.log('DELETE /fhir-1.6.0/Practitioner/' + req.params.id);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
