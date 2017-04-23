@@ -61,8 +61,8 @@ JsonRoutes.sendResult = function (res, options) {
 // Step 1 - Create New Practitioner  
 
 JsonRoutes.add("put", "/" + fhirVersion + "/Practitioner/:id", function (req, res, next) {
-  process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.params.id);
-  //process.env.DEBUG && console.log('PUT /fhir-1.6.0/Practitioner/' + req.query._count);
+  process.env.DEBUG && console.log('PUT /fhir-3.0.0/Practitioner/' + req.params.id);
+  //process.env.DEBUG && console.log('PUT /fhir-3.0.0/Practitioner/' + req.query._count);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -124,7 +124,7 @@ JsonRoutes.add("put", "/" + fhirVersion + "/Practitioner/:id", function (req, re
               process.env.TRACE && console.log('result', result);
               res.setHeader("Location", "fhir/Practitioner/" + result);
               res.setHeader("Last-Modified", new Date());
-              res.setHeader("ETag", "1.6.0");
+              res.setHeader("ETag", "3.0.0");
 
               var practitioners = Practitioners.find({_id: req.params.id});
               var payload = [];
@@ -158,7 +158,7 @@ JsonRoutes.add("put", "/" + fhirVersion + "/Practitioner/:id", function (req, re
               process.env.TRACE && console.log('result', result);
               res.setHeader("Location", "fhir/Practitioner/" + result);
               res.setHeader("Last-Modified", new Date());
-              res.setHeader("ETag", "1.6.0");
+              res.setHeader("ETag", "3.0.0");
 
               var practitioners = Practitioners.find({_id: req.params.id});
               var payload = [];
@@ -207,7 +207,7 @@ JsonRoutes.add("put", "/" + fhirVersion + "/Practitioner/:id", function (req, re
 // Step 2 - Read Practitioner  
 
 JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner/:id", function (req, res, next) {
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/' + req.params.id);
+  process.env.DEBUG && console.log('GET /fhir-3.0.0/Practitioner/' + req.params.id);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -315,9 +315,9 @@ JsonRoutes.add("post", "/" + fhirVersion + "/Practitioner", function (req, res, 
           }
           if (result) {
             process.env.TRACE && console.log('result', result);
-            res.setHeader("Location", "fhir-1.6.0/Practitioner/" + result);
+            res.setHeader("Location", "fhir-3.0.0/Practitioner/" + result);
             res.setHeader("Last-Modified", new Date());
-            res.setHeader("ETag", "1.6.0");
+            res.setHeader("ETag", "3.0.0");
 
             var practitioners = Practitioners.find({_id: result});
             var payload = [];
@@ -360,8 +360,8 @@ JsonRoutes.add("post", "/" + fhirVersion + "/Practitioner", function (req, res, 
 // Step 4 - PractitionerHistoryInstance
 
 JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner/:id/_history", function (req, res, next) {
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/', req.params);
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/', req.query._count);
+  process.env.DEBUG && console.log('GET /fhir-3.0.0/Practitioner/', req.params);
+  process.env.DEBUG && console.log('GET /fhir-3.0.0/Practitioner/', req.query._count);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -415,8 +415,8 @@ JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner/:id/_history", function
 // NOTE:  We've not implemented _history functionality yet; so this endpoint is mostly a duplicate of Step 2.
 
 JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner/:id/_history/:versionId", function (req, res, next) {
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.params);
-  //process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner/:id/_history/:versionId', req.query._count);
+  process.env.DEBUG && console.log('GET /fhir-3.0.0/Practitioner/:id/_history/:versionId', req.params);
+  //process.env.DEBUG && console.log('GET /fhir-3.0.0/Practitioner/:id/_history/:versionId', req.query._count);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -525,7 +525,7 @@ generateDatabaseQuery = function(query){
 }
 
 JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner", function (req, res, next) {
-  process.env.DEBUG && console.log('GET /fhir-1.6.0/Practitioner', req.query);
+  process.env.DEBUG && console.log('GET /fhir-3.0.0/Practitioner', req.query);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -573,7 +573,7 @@ JsonRoutes.add("get", "/" + fhirVersion + "/Practitioner", function (req, res, n
 // Step 6 - Practitioner Search Type  
 
 JsonRoutes.add("post", "/" + fhirVersion + "/Practitioner/:param", function (req, res, next) {
-  process.env.DEBUG && console.log('POST /fhir-1.6.0/Practitioner/' + JSON.stringify(req.query));
+  process.env.DEBUG && console.log('POST /fhir-3.0.0/Practitioner/' + JSON.stringify(req.query));
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("content-type", "application/fhir+json");
@@ -637,7 +637,7 @@ JsonRoutes.add("post", "/" + fhirVersion + "/Practitioner/:param", function (req
 // Step 7 - Practitioner Delete    
 
 JsonRoutes.add("delete", "/" + fhirVersion + "/Practitioner/:id", function (req, res, next) {
-  process.env.DEBUG && console.log('DELETE /fhir-1.6.0/Practitioner/' + req.params.id);
+  process.env.DEBUG && console.log('DELETE /fhir-3.0.0/Practitioner/' + req.params.id);
 
   res.setHeader("Access-Control-Allow-Origin", "*");
 
