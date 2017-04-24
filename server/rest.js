@@ -652,12 +652,12 @@ JsonRoutes.add("delete", "/" + fhirVersion + "/Practitioner/:id", function (req,
         process.env.TRACE && console.log('accessToken.userId', accessToken.userId);
       }
 
-      if (Practitioners.find({_id: req.params.id}).count() === 0) {
-        // Gone
-        JsonRoutes.sendResult(res, {
-          code: 410
-        });
-      } else {
+      // if (Practitioners.find({_id: req.params.id}).count() === 0) {
+      //   // Gone
+      //   JsonRoutes.sendResult(res, {
+      //     code: 410
+      //   });
+      // } else {
         Practitioners.remove({_id: req.params.id}, function(error, result){
           if (result) {
             // No Content
@@ -672,7 +672,7 @@ JsonRoutes.add("delete", "/" + fhirVersion + "/Practitioner/:id", function (req,
             });
           }
         });
-      }
+      // }
 
 
     } else {
