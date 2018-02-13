@@ -23,6 +23,7 @@ Package.onUse(function (api) {
   api.use('clinical:glass-ui@2.1.4');
   api.use('clinical:extended-api@2.2.2');
   api.use('clinical:base-model@1.3.5');
+  api.use('clinical:user-model@1.5.0');
   api.use('clinical:hl7-resource-datatypes@3.0.1');
   api.use('clinical:hl7-resource-bundle@1.3.10');
   api.use('matb33:collection-hooks@0.7.15');
