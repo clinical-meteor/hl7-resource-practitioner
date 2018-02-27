@@ -22,11 +22,11 @@ export {
   DynamicRoutes, 
 
   PractitionersPage,
-  PractitionersTable,
+  PractitionersTable
 
-  Practitioner,
-  Practitioners,
-  PractitionerSchema
+  // Practitioner,
+  // Practitioners,
+  // PractitionerSchema
 };
 
 

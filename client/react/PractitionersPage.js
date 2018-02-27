@@ -1,5 +1,6 @@
 import { CardText, CardTitle } from 'material-ui/Card';
 import { Tab, Tabs } from 'material-ui/Tabs';
+import { Paper } from 'material-ui/Paper';
 import { GlassCard, VerticalCanvas, Glass } from 'meteor/clinical:glass-ui';
 
 import PractitionerDetail  from './PractitionerDetail';
@@ -7,14 +8,18 @@ import PractitionersTable  from './PractitionersTable';
 
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session';
+import { Package } from 'meteor/meteor';
 
 import React  from 'react';
 import { ReactMeteorData } from 'meteor/react-meteor-data';
 import ReactMixin  from 'react-mixin';
 
+import { get } from 'lodash';
+
 Session.setDefault('practitionerPageTabIndex', 1);
 Session.setDefault('practitionerSearchFilter', '');
 Session.setDefault('selectedPractitioner', false);
+Session.setDefault('blockchainPractitionerData', []);
 
 export class PractitionersPage extends React.Component {
   getMeteorData() {
@@ -28,7 +33,8 @@ export class PractitionersPage extends React.Component {
       },
       tabIndex: Session.get('practitionerPageTabIndex'),
       practitionerSearchFilter: Session.get('practitionerSearchFilter'),
-      currentPractitioner: Session.get('selectedPractitioner')
+      currentPractitioner: Session.get('selectedPractitioner'),
+      blockchainData: Session.get('blockchainPractitionerData')
     };
 
     data.style = Glass.blur(data.style);
@@ -46,13 +52,19 @@ export class PractitionersPage extends React.Component {
 
   // this could be a mixin
   onNewTab(){
-    console.log("onNewTab; we should clear things...");
+    process.env.DEBUG && console.log("onNewTab; we should clear things...");
 
     Session.set('selectedPractitioner', false);
     Session.set('practitionerUpsert', false);
   }
 
   render() {
+    var blockchainTab;
+    if (get(Meteor, 'settings.public.defaults.displayBlockchainComponents')){
+      blockchainTab = <Tab className="practitionerBlockchainHisotryTab" label='Blockchain' onActive={this.handleActive} style={this.data.style.tab} value={3}>
+        <PractitionersTable showBarcodes={false} data={ this.data.blockchainData } />
+      </Tab>                 
+    }
     return (
       <div id="practitionersPage">
         <VerticalCanvas>
@@ -71,6 +83,7 @@ export class PractitionersPage extends React.Component {
                  <Tab className="practitionerDetailsTab" label='Detail' onActive={this.handleActive} style={this.data.style.tab} value={2}>
                   <PractitionerDetail id='practitionerDetails' />
                 </Tab>
+                { blockchainTab }
               </Tabs>
             </CardText>
           </GlassCard>

@@ -3,15 +3,60 @@ import React from 'react';
 import { ReactMeteorData } from 'meteor/react-meteor-data';
 import ReactMixin from 'react-mixin';
 import { Table } from 'react-bootstrap';
-
-//import { moment } from 'meteor/moment:momentjs';
-
+import { get } from 'lodash';
 
 
 Session.setDefault('selectedPractitioner', false);
 
 export default class PractitionersTable extends React.Component {
+  parsePractitioner(practitioner){
+    let result = {
+      _id: practitioner._id,
+      name: '',
+      telecomValue: '',
+      telecomUse: '',
+      qualificationId: '',
+      qualificationStart: '',
+      qualificationEnd: '',
+      issuer: ''
+    };
+
+    // fhir-1.6.0
+    if (practitioner.name && practitioner.name[0]) {
+      if(practitioner.name[0].text){
+        result.name = practitioner.name[0].text;
+      } else {
+        result.name = practitioner.name[0].given[0] + ' ' + practitioner.name[0].family[0];
+      } 
+    } else {
+    // fhir-1.0.2
+      result.name = practitioner.name.text;        
+    }
+
+    if (get(practitioner, 'telecom[0].value')) {
+      result.telecomValue = get(practitioner, 'telecom[0].value');
+    }
+    if (get(practitioner, 'telecom[0].use') ) {
+      result.telecomUse = get(practitioner, 'telecom[0].use')
+    }
+
+    if (practitioner.qualification && practitioner.qualification[0] && practitioner.qualification[0].identifier && practitioner.qualification[0].identifier[0] && practitioner.qualification[0].identifier[0].value ) {
+      result.qualificationId = practitioner.qualification[0].identifier[0].value;
+    }
+    if (practitioner.qualification && practitioner.qualification[0] && practitioner.qualification[0].identifier && practitioner.qualification[0].identifier[0] && practitioner.qualification[0].identifier[0].period && practitioner.qualification[0].identifier[0].period.start ) {
+      result.qualificationStart = moment(practitioner.qualification[0].identifier[0].period.start).format("MMM YYYY");
+    }
+    if (practitioner.qualification && practitioner.qualification[0] && practitioner.qualification[0].identifier && practitioner.qualification[0].identifier[0] && practitioner.qualification[0].identifier[0].period && practitioner.qualification[0].identifier[0].period.end) {
+      result.qualificationEnd = moment(practitioner.qualification[0].identifier[0].period.end).format("MMM YYYY");
+    }
+    if (practitioner.qualification && practitioner.qualification[0] && practitioner.qualification[0].issuer && practitioner.qualification[0].issuer.display ) {
+      result.issuer = practitioner.qualification[0].issuer.display;
+    }
+    return result;
+  }
   getMeteorData() {
+    var self = this;
+
     let data = {
       style: {
         row: Glass.darkroom({
@@ -24,58 +69,21 @@ export default class PractitionersTable extends React.Component {
 
     let query = {};
     let options = {};
-    if (Meteor.settings && Meteor.settings.public && Meteor.settings.public.defaults && Meteor.settings.public.defaults.paginationLimit) {
-      options.limit = Meteor.settings.public.defaults.paginationLimit;
+    if (get(Meteor, 'settings.public.defaults.paginationLimit')) {
+      options.limit = get(Meteor, 'settings.public.defaults.paginationLimit');
     }
 
-    data.practitioners = Practitioners.find(query, options).map(function(practitioner){
-      let result = {
-        _id: practitioner._id,
-        name: '',
-        telecomValue: '',
-        telecomUse: '',
-        qualificationId: '',
-        qualificationStart: '',
-        qualificationEnd: '',
-        issuer: ''
-      };
-
-      // fhir-1.6.0
-      if (practitioner.name && practitioner.name[0]) {
-        if(practitioner.name[0].text){
-          result.name = practitioner.name[0].text;
-        } else {
-          result.name = practitioner.name[0].given[0] + ' ' + practitioner.name[0].family[0];
-        } 
-      } else {
-      // fhir-1.0.2
-        result.name = practitioner.name.text;        
-      }
-
-      if (practitioner.telecom && practitioner.telecom[0] && practitioner.telecom[0].value ) {
-        result.telecomValue = practitioner.telecom[0].value;
-      }
-      if (practitioner.telecom && practitioner.telecom[0] && practitioner.telecom[0].use ) {
-        result.telecomUse = practitioner.telecom[0].use;
-      }
-
-      if (practitioner.qualification && practitioner.qualification[0] && practitioner.qualification[0].identifier && practitioner.qualification[0].identifier[0] && practitioner.qualification[0].identifier[0].value ) {
-        result.qualificationId = practitioner.qualification[0].identifier[0].value;
-      }
-      if (practitioner.qualification && practitioner.qualification[0] && practitioner.qualification[0].identifier && practitioner.qualification[0].identifier[0] && practitioner.qualification[0].identifier[0].period && practitioner.qualification[0].identifier[0].period.start ) {
-        result.qualificationStart = moment(practitioner.qualification[0].identifier[0].period.start).format("MMM YYYY");
-      }
-      if (practitioner.qualification && practitioner.qualification[0] && practitioner.qualification[0].identifier && practitioner.qualification[0].identifier[0] && practitioner.qualification[0].identifier[0].period && practitioner.qualification[0].identifier[0].period.end) {
-        result.qualificationEnd = moment(practitioner.qualification[0].identifier[0].period.end).format("MMM YYYY");
-      }
-      if (practitioner.qualification && practitioner.qualification[0] && practitioner.qualification[0].issuer && practitioner.qualification[0].issuer.display ) {
-        result.issuer = practitioner.qualification[0].issuer.display;
-      }
-
-      return result;
-    });
-
-    console.log("PractitionersTable[data]", data);
+    if(this.props.data){
+      //console.log('this.props.data', this.props.data)
+      data.practitioners = this.props.data.map(function(practitioner){
+        return self.parsePractitioner(practitioner);
+      });
+    } else {
+      data.practitioners = Practitioners.find(query, options).map(function(practitioner){
+        return self.parsePractitioner(practitioner);
+      });
+    }
+    process.env.DEBUG && console.log("PractitionersTable[data]", data);
     return data;
   }
 
@@ -86,6 +94,7 @@ export default class PractitionersTable extends React.Component {
   }
   render () {
     let tableRows = [];
+    //console.log('this.data.practitioners', this.data.practitioners)
     for (var i = 0; i < this.data.practitioners.length; i++) {
       tableRows.push(
       <tr className='practitionerRow' key={i} style={this.data.style.row} onClick={ this.rowClick.bind('this', this.data.practitioners[i]._id) }>
@@ -102,7 +111,7 @@ export default class PractitionersTable extends React.Component {
 
 
     return(
-      <Table id="practitionersTable" responses hover >
+      <Table id="practitionersTable" hover >
         <thead>
           <tr>
             <th className="name">name</th>

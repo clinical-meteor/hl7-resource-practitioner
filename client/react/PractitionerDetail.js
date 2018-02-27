@@ -1,9 +1,10 @@
-import { CardActions, CardText } from 'material-ui/Card';
+import { Card, CardActions, CardText, CardTitle, CardHeader } from 'material-ui/Card';
 import { Col, Grid, Row } from 'react-bootstrap';
 
 import {Bert} from 'meteor/themeteorchef:bert';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
+import Paper from 'material-ui/Paper';
 
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session';
@@ -11,6 +12,9 @@ import { Session } from 'meteor/session';
 import React from 'react';
 import { ReactMeteorData } from 'meteor/react-meteor-data';
 import ReactMixin from 'react-mixin';
+
+import PractitionersTable  from './PractitionersTable';
+import { get } from 'lodash';
 
 let defaultPractitioner = {
   "resourceType" : "Practitioner",
@@ -39,16 +43,18 @@ let defaultPractitioner = {
 };
 
 Session.setDefault('practitionerUpsert', defaultPractitioner);
-
-
+Session.setDefault('practitionerBlockchainData', []);
 
 export default class PractitionerDetail extends React.Component {
+  parsePractitioner(practitioner){
+
+  }
   getMeteorData() {
     let data = {
       practitionerId: false,
-      practitioner: defaultPractitioner
+      practitioner: defaultPractitioner,
+      blockchainData: Session.get('practitionerBlockchainData')
     };
-
 
     if (Session.get('practitionerUpsert')) {
       data.practitioner = Session.get('practitionerUpsert');
@@ -57,16 +63,18 @@ export default class PractitionerDetail extends React.Component {
       if (Session.get('selectedPractitioner')) {
         data.practitionerId = Session.get('selectedPractitioner');
         selectedPractitioner = Practitioners.findOne({_id: Session.get('selectedPractitioner')});
-      } else {
+      }       
+      if(!selectedPractitioner){
         selectedPractitioner = defaultPractitioner;
       }
-        console.log("selectedPractitioner", selectedPractitioner);
+
+      console.log("selectedPractitioner", selectedPractitioner);
 
         //data.practitioner = {};
 
         // fhir-1.6.0
-        if (selectedPractitioner.name && selectedPractitioner.name[0]) {
-          data.practitioner.name = [selectedPractitioner.name[0]];
+        if (get(selectedPractitioner, 'name[0]')) {
+          data.practitioner.name = [ get(selectedPractitioner, 'name[0]') ];
           // if(selectedPractitioner.name[0].text){
           //   data.practitioner.name = selectedPractitioner.name[0].text;
           // } else if (selectedPractitioner.name[0].given && selectedPractitioner.name[0].family){
@@ -74,16 +82,16 @@ export default class PractitionerDetail extends React.Component {
           // } 
         } else {
         // fhir-1.0.2
-          data.practitioner.name = selectedPractitioner.name.text;        
+          data.practitioner.name = get(selectedPractitioner, 'name.text');
         }
 
-        if(selectedPractitioner.telecom && selectedPractitioner.telecom[0]){
+        if(get(selectedPractitioner, 'telecom[0]')){
           data.practitioner.telecom = [{
-            value: selectedPractitioner.telecom[0].value,
-            use: selectedPractitioner.telecom[0].use
+            value: get(selectedPractitioner, 'telecom[0].value'),
+            use: get(selectedPractitioner, 'telecom[0].use')
           }];
         } 
-        if(selectedPractitioner.qualification){
+        if(get(selectedPractitioner, 'qualification')){
           var newQualification = {
               issuer: {
                 display: ''
@@ -91,14 +99,14 @@ export default class PractitionerDetail extends React.Component {
               identifier: []
             };
           if(selectedPractitioner.qualification[0]){
-            newQualification.issuer.display = selectedPractitioner.qualification[0].issuer.display;
+            newQualification.issuer.display = get(selectedPractitioner, 'qualification[0].issuer.display');
           } 
-          if(selectedPractitioner.qualification[0] && selectedPractitioner.qualification[0].identifier && selectedPractitioner.qualification[0].identifier[0]){
+          if(get(selectedPractitioner, 'qualification[0].identifier[0]')){
             newQualification.identifier = [{
-              value: selectedPractitioner.qualification[0].identifier[0].value,
+              value: get(selectedPractitioner, 'qualification[0].identifier[0].value'),
               period: {
-                start: selectedPractitioner.qualification[0].identifier[0].period.start,
-                end: selectedPractitioner.qualification[0].identifier[0].period.end
+                start: get(selectedPractitioner, 'qualification[0].identifier[0].period.start'),
+                end: get(selectedPractitioner, 'qualification[0].identifier[0].period.end'),
               }
             }]
           }
@@ -137,7 +145,7 @@ export default class PractitionerDetail extends React.Component {
                 type='text'
                 floatingLabelText='name'
                 floatingLabelFixed={true}
-                value={ (this.data.practitioner.name && this.data.practitioner.name[0]) ? this.data.practitioner.name[0].text : '' }
+                value={ get(this, 'data.practitioner.name[0].text') }
                 onChange={ this.changeState.bind(this, 'name')}
                 fullWidth
                 /><br/>
@@ -151,7 +159,7 @@ export default class PractitionerDetail extends React.Component {
                 floatingLabelText='telecom value'
                 floatingLabelFixed={true}
                 hintText='701-555-1234'
-                value={ (this.data.practitioner.telecom && this.data.practitioner.telecom[0]) ? this.data.practitioner.telecom[0].value : '' }
+                value={ get(this, 'data.practitioner.telecom[0].value') }
                 onChange={ this.changeState.bind(this, 'telecomValue')}
                 fullWidth
                 /><br/>
@@ -165,7 +173,7 @@ export default class PractitionerDetail extends React.Component {
                 floatingLabelText='telecom use'
                 floatingLabelFixed={true}
                 hintText='work | mobile | home'
-                value={ (this.data.practitioner.telecom && this.data.practitioner.telecom[0]) ? this.data.practitioner.telecom[0].use : '' }
+                value={ get(this, 'data.practitioner.telecom[0].use') }
                 onChange={ this.changeState.bind(this, 'telecomUse')}
                 fullWidth
                 /><br/>
@@ -180,7 +188,7 @@ export default class PractitionerDetail extends React.Component {
                 type='text'
                 floatingLabelText='issuer'
                 floatingLabelFixed={true}
-                value={ (this.data.practitioner.qualification && this.data.practitioner.qualification[0] && this.data.practitioner.qualification[0].issuer) ? this.data.practitioner.qualification[0].issuer.display : ''}
+                value={ get(this, 'data.practitioner.qualification[0].issuer.display') }
                 onChange={ this.changeState.bind(this, 'issuer')}
                 fullWidth
                 /><br/>
@@ -193,7 +201,7 @@ export default class PractitionerDetail extends React.Component {
                 type='text'
                 floatingLabelText='qualification ID'
                 floatingLabelFixed={true}
-                value={this.data.practitioner.qualificationId}
+                value={ get(this, 'data.practitioner.qualificationId') }
                 onChange={ this.changeState.bind(this, 'qualificationId')}
                 fullWidth
                 /><br/>
@@ -206,7 +214,7 @@ export default class PractitionerDetail extends React.Component {
                 type='date'
                 floatingLabelText='start'
                 floatingLabelFixed={true}
-                value={this.data.practitioner.qualificationStart}
+                value={ get(this, 'data.practitioner.qualificationStart') }
                 onChange={ this.changeState.bind(this, 'qualificationStart')}
                 fullWidth
                 /><br/>
@@ -219,18 +227,34 @@ export default class PractitionerDetail extends React.Component {
                 type='date'
                 floatingLabelText='end'
                 floatingLabelFixed={true}
-                value={this.data.practitioner.qualificationEnd}
+                value={ get(this, 'data.practitioner.qualificationEnd') }
                 onChange={ this.changeState.bind(this, 'qualificationEnd')}
                 fullWidth
                 /><br/>
             </Col>
-          </Row>          
+          </Row>
+          { this.displayQualifications(this.data.practitionerId) }          
         </CardText>
         <CardActions>
           { this.determineButtons(this.data.practitionerId) }
         </CardActions>
       </div>
     );
+  }
+  displayQualifications(practitionerId){
+
+    if (practitionerId && get(Meteor, 'settings.public.defaults.displayBlockchainComponents')){      
+      return (
+        <Row>
+          <Paper zDepth={2} style={{borderLeft: 'solid gray 3px', marginLeft: '60px', marginRight: '20px',marginTop: '40px', marginBottom: '40px'}}>
+            <CardTitle title='Qualifications & Credentials' />
+            <CardText>
+              <PractitionersTable showBarcodes={false} data={ this.data.blockchainData }/>
+            </CardText>
+          </Paper>
+        </Row>
+      );
+    }
   }
   determineButtons(practitionerId){
     if (practitionerId) {
@@ -275,44 +299,40 @@ export default class PractitionerDetail extends React.Component {
         }];
         break;
       case "telecomValue":
-        var currentTelecom = practitionerUpdate.telecom[0];
+        var currentTelecom = get(practitionerUpdate, 'telecom[0]');
         currentTelecom.value = value;
         practitionerUpdate.telecom = [currentTelecom];
         break;
       case "telecomUse":
-        var currentTelecom = practitionerUpdate.telecom[0];
+        var currentTelecom = get(practitionerUpdate, 'telecom[0]');
         currentTelecom.use = value;
         practitionerUpdate.telecom = [currentTelecom];
         break;f
       case "issuer":
-        var currentIssuer = practitionerUpdate.qualification[0];
+        var currentIssuer = get(practitionerUpdate, 'qualification[0]'); 
         currentIssuer.issuer.display = value;
         practitionerUpdate.qualification = [currentIssuer];
         break;
       case "qualificationId":
         var currentCredential = {};
-        if(practitionerUpdate.qualification[0].identifier[0]){
-          currentCredential = practitionerUpdate.qualification[0].identifier[0];
+        if(get(practitionerUpdate, 'qualification[0].identifier[0]')){
+          currentCredential = get(practitionerUpdate, 'qualification[0].identifier[0]');
         }
         practitionerUpdate.qualification[0].identifier = [currentCredential];
-        // practitionerUpdate.qualification[0].identifier[0].value = value;
         break;
       case "qualificationStart":
-        var currentCredential = practitionerUpdate.qualification[0].identifier[0];
+        var currentCredential = get(practitionerUpdate, 'qualification[0].identifier[0]');
         currentCredential.period.start = value;
         practitionerUpdate.qualification[0].identifier = [currentCredential];
-        // practitionerUpdate.qualification[0].identifier[0].period.start = value;
         break;
       case "qualificationEnd":
-        var currentCredential = practitionerUpdate.qualification[0].identifier[0];
+        var currentCredential = get(practitionerUpdate, 'qualification[0].identifier[0]');
         currentCredential.period.end = value;
         practitionerUpdate.qualification[0].identifier = [currentCredential];
-        // practitionerUpdate.qualification[0].identifier[0].period.end = value;
         break;
       default:
 
     }
-    // practitionerUpdate[field] = value;
     if(process.env.NODE_ENV === "test") console.log("practitionerUpdate", practitionerUpdate);
 
     Session.set('practitionerUpsert', practitionerUpdate);
