@@ -4,11 +4,11 @@ import { ReactMeteorData } from 'meteor/react-meteor-data';
 import ReactMixin from 'react-mixin';
 import { Table } from 'react-bootstrap';
 import { get } from 'lodash';
-
+import { Glass } from 'meteor/clinical:glass-ui';
 
 Session.setDefault('selectedPractitioner', false);
 
-export default class PractitionersTable extends React.Component {
+export class PractitionersTable extends React.Component {
   parsePractitioner(practitioner){
     let result = {
       _id: practitioner._id,
@@ -134,3 +134,4 @@ export default class PractitionersTable extends React.Component {
 }
 
 ReactMixin(PractitionersTable.prototype, ReactMeteorData);
+export default PractitionersTable;
