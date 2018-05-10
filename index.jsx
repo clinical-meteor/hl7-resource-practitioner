@@ -23,10 +23,6 @@ export {
 
   PractitionersPage,
   PractitionersTable
-
-  // Practitioner,
-  // Practitioners,
-  // PractitionerSchema
 };
 
 
