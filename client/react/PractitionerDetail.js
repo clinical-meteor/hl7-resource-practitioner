@@ -1,7 +1,7 @@
 import { Card, CardActions, CardText, CardTitle, CardHeader } from 'material-ui/Card';
 import { Col, Grid, Row } from 'react-bootstrap';
 
-import {Bert} from 'meteor/themeteorchef:bert';
+import {Bert} from 'meteor/clinical:alert';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 import Paper from 'material-ui/Paper';
