@@ -1,4 +1,4 @@
-##clinical:hl7-resource-practitioner
+## clinical:hl7-resource-practitioner
 
 #### Licensing  
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
