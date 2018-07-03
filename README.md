@@ -1,8 +1,18 @@
 ##clinical:hl7-resource-practitioner
 
-HL7 FHIR Resource - Practitioner
+#### Licensing  
+![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-===============================
+
+#### Integration & Verification Tests  
+[![CircleCI](https://circleci.com/gh/clinical-meteor/hl7-resource-practitioner/tree/master.svg?style=svg)](https://circleci.com/gh/clinical-meteor/hl7-resource-practitioner/tree/master)
+
+
+#### API Reference  
+The resource in this package implements Practitioner resource schema, specified at [https://www.hl7.org/fhir/practitioner.html](https://www.hl7.org/fhir/practitioner.html). 
+
+
+
 #### Installation  
 
 ````bash
@@ -13,17 +23,11 @@ meteor add clinical:hl7-resource-practitioner
 INITIALIZE=true meteor
 ````
 
-===============================
+
 #### Utilities  
 
 If you're working with HL7 FHIR Resources, we recommend using [Postman](https://chrome.google.com/webstore/detail/postman/fhbjgbiflinjbdggehcddcbncdddomop?hl=en).
 
-===============================
-#### Conformance Statement  
 
-The resource in this package implements the FHIR Practitioner Resource schema provided at  [https://www.hl7.org/fhir/practitioner.html](https://www.hl7.org/fhir/practitioner.html).  
 
-===============================
-#### Licensing  
 
-![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
