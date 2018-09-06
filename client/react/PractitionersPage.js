@@ -6,6 +6,8 @@ import { GlassCard, VerticalCanvas, Glass } from 'meteor/clinical:glass-ui';
 import PractitionerDetail  from './PractitionerDetail';
 import PractitionersTable  from './PractitionersTable';
 
+import PropTypes from 'prop-types';
+
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session';
 import { Package } from 'meteor/meteor';
@@ -18,8 +20,9 @@ import { get } from 'lodash';
 
 Session.setDefault('practitionerPageTabIndex', 1);
 Session.setDefault('practitionerSearchFilter', '');
-Session.setDefault('selectedPractitioner', false);
+Session.setDefault('selectedPractitionerId', false);
 Session.setDefault('blockchainPractitionerData', []);
+Session.setDefault('fhirVersion', 'v1.0.2');
 
 export class PractitionersPage extends React.Component {
   getMeteorData() {
@@ -33,9 +36,17 @@ export class PractitionersPage extends React.Component {
       },
       tabIndex: Session.get('practitionerPageTabIndex'),
       practitionerSearchFilter: Session.get('practitionerSearchFilter'),
-      currentPractitioner: Session.get('selectedPractitioner'),
-      blockchainData: Session.get('blockchainPractitionerData')
+      selectedPractitionerId: Session.get('selectedPractitionerId'),
+      blockchainData: Session.get('blockchainPractitionerData'),
+      fhirVersion: Session.get('fhirVersion'),
+      selectedPractitioner: false
     };
+
+    if (Session.get('selectedPractitionerId')){
+      data.selectedPractitioner = Practitioners.findOne({_id: Session.get('selectedPractitionerId')});
+    } else {
+      data.selectedPractitioner = false;
+    }
 
     data.style = Glass.blur(data.style);
     data.style.appbar = Glass.darkroom(data.style.appbar);
@@ -54,7 +65,7 @@ export class PractitionersPage extends React.Component {
   onNewTab(){
     process.env.DEBUG && console.log("onNewTab; we should clear things...");
 
-    Session.set('selectedPractitioner', false);
+    Session.set('selectedPractitionerId', false);
     Session.set('practitionerUpsert', false);
   }
 
@@ -75,13 +86,22 @@ export class PractitionersPage extends React.Component {
             <CardText>
               <Tabs id="practitionersPageTabs" default value={this.data.tabIndex} onChange={this.handleTabChange} initialSelectedIndex={1} style={{borderRight: 'none'}} >
                 <Tab className="newPractitionerTab" label='New' style={this.data.style.tab} onActive={ this.onNewTab } value={0} >
-                  <PractitionerDetail id='newPractitioner' />
+                  <PractitionerDetail 
+                    id='newPractitioner'
+                    fhirVersion={this.data.fhirVersion}
+                    practitioner={ this.data.selectedPractitioner }
+                    practitionerId={ this.data.selectedPractitionerId } />  
                 </Tab>
                 <Tab className="practitionerListTab" label='Practitioners' onActive={this.handleActive} style={this.data.style.tab} value={1}>
-                  <PractitionersTable showBarcodes={false} />
+                  <PractitionersTable 
+                    fhirVersion={this.data.fhirVersion} 
+                    showBarcodes={false} />
                  </Tab>
                  <Tab className="practitionerDetailsTab" label='Detail' onActive={this.handleActive} style={this.data.style.tab} value={2}>
-                  <PractitionerDetail id='practitionerDetails' />
+                  <PractitionerDetail 
+                    id='practitionerDetails' 
+                    practitioner={ this.data.selectedPractitioner }
+                    practitionerId={ this.data.selectedPractitionerId } />  
                 </Tab>
                 { blockchainTab }
               </Tabs>

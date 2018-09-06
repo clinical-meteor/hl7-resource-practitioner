@@ -1,7 +1,6 @@
 import { Card, CardActions, CardText, CardTitle, CardHeader } from 'material-ui/Card';
 import { Col, Grid, Row } from 'react-bootstrap';
 
-import {Bert} from 'meteor/clinical:alert';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 import Paper from 'material-ui/Paper';
@@ -12,120 +11,138 @@ import { Session } from 'meteor/session';
 import React from 'react';
 import { ReactMeteorData } from 'meteor/react-meteor-data';
 import ReactMixin from 'react-mixin';
+import PropTypes from 'prop-types';
 
 import PractitionersTable  from './PractitionersTable';
-import { get } from 'lodash';
+import { get, set } from 'lodash';
+import moment from 'moment';
 
-let defaultPractitioner = {
-  "resourceType" : "Practitioner",
-    "name" : [{
-      "resourceType" : "HumanName",
-      "text" : ""
-    }],
-    "telecom" : [{
-      "resourceType" : "ContactPoint",
-      "system" : "phone",
-      "value" : "",
-      "use" : "",
-      "rank" : 1
-    }],
-    "qualification" : [{
-      "identifier" : [{
-        "use" : "certficate",
-        "value" : "",
-        "period" : {}
-      }],
-      "issuer" : {
-        "display" : "",
-        "reference" : ""
-      }
-  }]
-};
-
-Session.setDefault('practitionerUpsert', defaultPractitioner);
 Session.setDefault('practitionerBlockchainData', []);
 
-export default class PractitionerDetail extends React.Component {
-  parsePractitioner(practitioner){
-
+export class PractitionerDetail extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      practitionerId: false,
+      practitioner: {
+        resourceType : "Practitioner",
+          name : {
+            resourceType : "HumanName",
+            text : ""
+          },
+          telecom : [{
+            resourceType : "ContactPoint",
+            system : "phone",
+            value : "",
+            use : "",
+            rank : 1
+          }, {
+            resourceType : "ContactPoint",
+            system : "email",
+            value : "",
+            use : "",
+            rank : 1
+          }],
+          qualification : [{
+            identifier : [{
+              use : "certficate",
+              value : "",
+              period : {
+                start: null,
+                end: null
+              }
+            }],
+            issuer : {
+              display : "",
+              reference : ""
+            }
+        }],
+        address: [{
+          text: '',
+          city: '',
+          state: '',
+          postalCode: ''
+        }]
+      },
+      form: {
+        name: '',
+        phone: '',
+        email: '',
+        qualificationIssuer: '',
+        qualificationIdentifier: '',
+        qualificationCode: '',
+        qualificationStart: null,
+        qualificationEnd: null,
+        text: '',
+        city: '',
+        state: '',
+        postalCode: ''
+      }
+    }
   }
+  dehydrateFhirResource(practitioner) {
+    let formData = Object.assign({}, this.state.form);
+
+    formData.name = get(practitioner, 'name.text')
+
+    let telecomArray = get(practitioner, 'telecom');
+    telecomArray.forEach(function(telecomRecord){
+      if(get(telecomRecord, 'system') === 'phone'){
+        formData.phone = get(telecomRecord, 'value');
+      }
+      if(get(telecomRecord, 'system') === 'email'){
+        formData.email = get(telecomRecord, 'value');
+      }
+    })
+
+    formData.qualificationIssuer = get(practitioner, 'qualification[0].issuer.display')
+    formData.qualificationIdentifier = get(practitioner, 'qualification[0].identifier')
+    formData.qualificationStart = moment(get(practitioner, 'qualification[0].period.start')).format('YYYY-MM-DD')
+    formData.qualificationEnd = moment(get(practitioner, 'qualification[0].period.end')).format('YYYY-MM-DD')
+    formData.qualificationCode = get(practitioner, 'qualification[0].code.coding[0].code')
+
+    formData.text = get(practitioner, 'address[0].text')
+    formData.city = get(practitioner, 'address[0].city')
+    formData.state = get(practitioner, 'address[0].state')
+    formData.postalCode = get(practitioner, 'address[0].postalCode')
+
+    return formData;
+  }
+
+  shouldComponentUpdate(nextProps){
+    process.env.NODE_ENV === "test" && console.log('PractitionerDetail.shouldComponentUpdate()', nextProps, this.state)
+    let shouldUpdate = true;
+
+    // both false; don't take any more updates
+    if(nextProps.practitioner === this.state.practitioner){
+      shouldUpdate = false;
+    }
+
+    // received an practitioner from the table; okay lets update again
+    if(nextProps.practitionerId !== this.state.practitionerId){
+      this.setState({practitionerId: nextProps.practitionerId})
+      
+      if(nextProps.practitioner){
+        this.setState({practitioner: nextProps.practitioner})     
+        this.setState({form: this.dehydrateFhirResource(nextProps.practitioner)})       
+      }
+      shouldUpdate = true;
+    }
+ 
+    return shouldUpdate;
+  }
+
+
   getMeteorData() {
     let data = {
-      practitionerId: false,
-      practitioner: defaultPractitioner,
-      blockchainData: Session.get('practitionerBlockchainData')
+      practitionerId: this.props.practitionerId,
+      practitioner: false,
+      form: this.state.form
     };
 
-    if (Session.get('practitionerUpsert')) {
-      data.practitioner = Session.get('practitionerUpsert');
-    } else {
-      let selectedPractitioner;
-      if (Session.get('selectedPractitioner')) {
-        data.practitionerId = Session.get('selectedPractitioner');
-        selectedPractitioner = Practitioners.findOne({_id: Session.get('selectedPractitioner')});
-      }       
-      if(!selectedPractitioner){
-        selectedPractitioner = defaultPractitioner;
-      }
-
-      console.log("selectedPractitioner", selectedPractitioner);
-
-        //data.practitioner = {};
-
-        // fhir-1.6.0
-        if (get(selectedPractitioner, 'name[0]')) {
-          data.practitioner.name = [ get(selectedPractitioner, 'name[0]') ];
-          // if(selectedPractitioner.name[0].text){
-          //   data.practitioner.name = selectedPractitioner.name[0].text;
-          // } else if (selectedPractitioner.name[0].given && selectedPractitioner.name[0].family){
-          //   data.practitioner.name = selectedPractitioner.name[0].given[0] + ' ' + selectedPractitioner.name[0].family;
-          // } 
-        } else {
-        // fhir-1.0.2
-          data.practitioner.name = get(selectedPractitioner, 'name.text');
-        }
-
-        if(get(selectedPractitioner, 'telecom[0]')){
-          data.practitioner.telecom = [{
-            value: get(selectedPractitioner, 'telecom[0].value'),
-            use: get(selectedPractitioner, 'telecom[0].use')
-          }];
-        } 
-        if(get(selectedPractitioner, 'qualification')){
-          var newQualification = {
-              issuer: {
-                display: ''
-              }, 
-              identifier: []
-            };
-          if(selectedPractitioner.qualification[0]){
-            newQualification.issuer.display = get(selectedPractitioner, 'qualification[0].issuer.display');
-          } 
-          if(get(selectedPractitioner, 'qualification[0].identifier[0]')){
-            newQualification.identifier = [{
-              value: get(selectedPractitioner, 'qualification[0].identifier[0].value'),
-              period: {
-                start: get(selectedPractitioner, 'qualification[0].identifier[0].period.start'),
-                end: get(selectedPractitioner, 'qualification[0].identifier[0].period.end'),
-              }
-            }]
-          }
-
-          data.practitioner.qualification = [newQualification];
-
-          // if (selectedPractitioner.qualification[0] && selectedPractitioner.qualification[0].identifier && selectedPractitioner.qualification[0].identifier[0] && selectedPractitioner.qualification[0].identifier[0].value ) {
-          //   data.practitioner.qualificationId = selectedPractitioner.qualification[0].identifier[0].value;
-          // }
-          // if (selectedPractitioner.qualification[0] && selectedPractitioner.qualification[0].identifier && selectedPractitioner.qualification[0].identifier[0] && selectedPractitioner.qualification[0].identifier[0].period && selectedPractitioner.qualification[0].identifier[0].period.start ) {
-          //   data.practitioner.qualificationStart = selectedPractitioner.qualification[0].identifier[0].period.start;
-          // }
-          // if (selectedPractitioner.qualification[0] && selectedPractitioner.qualification[0].identifier && selectedPractitioner.qualification[0].identifier[0] && selectedPractitioner.qualification[0].identifier[0].period && selectedPractitioner.qualification[0].identifier[0].period.end) {
-          //   data.practitioner.qualificationEnd = selectedPractitioner.qualification[0].identifier[0].period.end;
-          // }
-
-        }
-          
-    };
+    if(this.props.practitioner){
+      data.practitioner = this.props.practitioner;
+    }
 
     if(process.env.NODE_ENV === "test") console.log("PractitionerDetail[data]", data);
     return data;
@@ -133,6 +150,9 @@ export default class PractitionerDetail extends React.Component {
 
 
   render() {
+    if(process.env.NODE_ENV === "test") console.log('PractitionerDetail.render()', this.state)
+    let formData = this.state.form;
+
     return (
       <div id={this.props.id} className="practitionerDetail">
         <CardText>
@@ -145,64 +165,123 @@ export default class PractitionerDetail extends React.Component {
                 type='text'
                 floatingLabelText='name'
                 floatingLabelFixed={true}
-                value={ get(this, 'data.practitioner.name[0].text') }
+                hintText='Alison Camron'
+                value={ get(formData, 'name') }
                 onChange={ this.changeState.bind(this, 'name')}
                 fullWidth
                 /><br/>
             </Col>
             <Col md={3}>
               <TextField
-                id='telecomValueInput'
-                ref='telecomValue'
-                name='telecomValue'
-                type='text'
-                floatingLabelText='telecom value'
+                id='emailInput'
+                ref='email'
+                name='email'
+                type='email'
+                floatingLabelText='Email'
                 floatingLabelFixed={true}
-                hintText='701-555-1234'
-                value={ get(this, 'data.practitioner.telecom[0].value') }
-                onChange={ this.changeState.bind(this, 'telecomValue')}
+                hintText='drcamron@symptomatic.io'
+                value={ get(formData, 'email') }
+                onChange={ this.changeState.bind(this, 'email')}
                 fullWidth
                 /><br/>
             </Col>
             <Col md={3}>
               <TextField
-                id='telecomUseInput'
-                ref='telecomUse'
-                name='telecomUse'
-                type='text'
-                floatingLabelText='telecom use'
+                id='phoneInput'
+                ref='phone'
+                name='phone'
+                type='phone'
+                floatingLabelText='Phone'
                 floatingLabelFixed={true}
-                hintText='work | mobile | home'
-                value={ get(this, 'data.practitioner.telecom[0].use') }
-                onChange={ this.changeState.bind(this, 'telecomUse')}
+                hintText='773-555-1010'
+                value={ get(formData, 'phone') }
+                onChange={ this.changeState.bind(this, 'phone')}
                 fullWidth
                 /><br/>
             </Col>
           </Row>
+
           <Row>
-            <Col md={4}>
+            <Col md={6}>
               <TextField
-                id='issuerInput'
-                ref='issuer'
-                name='issuer'
-                type='text'
-                floatingLabelText='issuer'
+                id='textInput'
+                ref='text'
+                name='text'
+                floatingLabelText='Address'
+                value={ get(formData, 'text') }
+                onChange={ this.changeState.bind(this, 'text')}
                 floatingLabelFixed={true}
-                value={ get(this, 'data.practitioner.qualification[0].issuer.display') }
-                onChange={ this.changeState.bind(this, 'issuer')}
+                hintText='South Side'
                 fullWidth
                 /><br/>
             </Col>
             <Col md={2}>
               <TextField
-                id='qualificationIdInput'
-                ref='qualificationId'
-                name='qualificationId'
-                type='text'
-                floatingLabelText='qualification ID'
+                id='cityInput'
+                ref='city'
+                name='city'
+                floatingLabelText='City'
+                value={ get(formData, 'city') }
+                onChange={ this.changeState.bind(this, 'city')}
+                hintText='Chicago'
                 floatingLabelFixed={true}
-                value={ get(this, 'data.practitioner.qualificationId') }
-                onChange={ this.changeState.bind(this, 'qualificationId')}
+                fullWidth
+                /><br/>
+            </Col>
+            <Col md={2}>
+              <TextField
+                id='stateInput'
+                ref='state'
+                name='state'
+                floatingLabelText='State'
+                value={ get(formData, 'state') }
+                onChange={ this.changeState.bind(this, 'state')}
+                floatingLabelFixed={true}
+                hintText='Illinois'
+                fullWidth
+                /><br/>
+            </Col>
+            <Col md={2}>
+              <TextField
+                id='postalCodeInput'
+                ref='postalCode'
+                name='postalCode'
+                floatingLabelText='Postal Code'
+                value={ get(formData, 'postalCode') }
+                onChange={ this.changeState.bind(this, 'postalCode')}
+                floatingLabelFixed={true}
+                hintText='60637'
+                fullWidth
+                /><br/>
+            </Col>
+          </Row>
+
+                    <Row>
+            <Col md={4}>
+              <TextField
+                id='qualificationIssuerInput'
+                ref='qualificationIssuer'
+                name='qualificationIssuer'
+                type='text'
+                floatingLabelText='Qualification Issuer'
+                floatingLabelFixed={true}
+                value={ get(formData, 'qualificationIssuer') }
+                onChange={ this.changeState.bind(this, 'qualificationIssuer')}
+                hintText='American College of Emergency Physicians'
+                fullWidth
+                /><br/>
+            </Col>
+            <Col md={2}>
+              <TextField
+                id='qualificationCodeInput'
+                ref='qualificationCode'
+                name='qualificationCode'
+                type='text'
+                floatingLabelText='Qualification Code'
+                floatingLabelFixed={true}
+                value={ get(formData, 'qualificationCode') }
+                onChange={ this.changeState.bind(this, 'qualificationCode')}
+                hintText='ACEP-10792866'
                 fullWidth
                 /><br/>
             </Col>
@@ -212,9 +291,9 @@ export default class PractitionerDetail extends React.Component {
                 ref='qualificationStart'
                 name='qualificationStart'
                 type='date'
-                floatingLabelText='start'
+                floatingLabelText='Start'
                 floatingLabelFixed={true}
-                value={ get(this, 'data.practitioner.qualificationStart') }
+                value={ get(formData, 'qualificationStart') }
                 onChange={ this.changeState.bind(this, 'qualificationStart')}
                 fullWidth
                 /><br/>
@@ -225,15 +304,15 @@ export default class PractitionerDetail extends React.Component {
                 ref='qualificationEnd'
                 name='qualificationEnd'
                 type='date'
-                floatingLabelText='end'
+                floatingLabelText='End'
                 floatingLabelFixed={true}
-                value={ get(this, 'data.practitioner.qualificationEnd') }
+                value={ get(formData, 'qualificationEnd') }
                 onChange={ this.changeState.bind(this, 'qualificationEnd')}
                 fullWidth
                 /><br/>
             </Col>
           </Row>
-          { this.displayQualifications(this.data.practitionerId) }          
+          { this.displayQualifications(this.data.practitionerId) }     
         </CardText>
         <CardActions>
           { this.determineButtons(this.data.practitionerId) }
@@ -260,7 +339,7 @@ export default class PractitionerDetail extends React.Component {
     if (practitionerId) {
       return (
         <div>
-          <RaisedButton id="savePractitionerButton" className="savePractitionerButton" primary={true} label="Save" onClick={this.handleSaveButton.bind(this)} style={{marginRight: '20px'}} />
+          <RaisedButton id="updatePractitionerButton" className="savePractitionerButton" primary={true} label="Save" onClick={this.handleSaveButton.bind(this)} style={{marginRight: '20px'}} />
           <RaisedButton id="deletePractitionerButton" label="Delete" onClick={this.handleDeleteButton.bind(this)} />
         </div>
       );
@@ -271,123 +350,185 @@ export default class PractitionerDetail extends React.Component {
     }
   }
 
-  // this could be a mixin
-  changeState(field, event, value){
-
-    let practitionerUpdate;
-
-    if(process.env.NODE_ENV === "test") console.log("practitionerDetail.changeState", field, event, value);
-
-    // by default, assume there's no other data and we're creating a new practitioner
-    if (Session.get('practitionerUpsert')) {
-      practitionerUpdate = Session.get('practitionerUpsert');
-    } else {
-      practitionerUpdate = defaultPractitioner;
-    }
 
 
-
-    // if there's an existing practitioner, use them
-    if (Session.get('selectedPractitioner')) {
-      practitionerUpdate = this.data.practitioner;
-    }
+  updateFormData(formData, field, textValue){
+    if(process.env.NODE_ENV === "test") console.log("PatientDetail.updateFormData", formData, field, textValue);
 
     switch (field) {
       case "name":
-        practitionerUpdate.name = [{
-          text: value
-        }];
+        set(formData, 'name', textValue)
         break;
-      case "telecomValue":
-        var currentTelecom = get(practitionerUpdate, 'telecom[0]');
-        currentTelecom.value = value;
-        practitionerUpdate.telecom = [currentTelecom];
+      case "phone":
+        set(formData, 'phone', textValue)
         break;
-      case "telecomUse":
-        var currentTelecom = get(practitionerUpdate, 'telecom[0]');
-        currentTelecom.use = value;
-        practitionerUpdate.telecom = [currentTelecom];
-        break;f
-      case "issuer":
-        var currentIssuer = get(practitionerUpdate, 'qualification[0]'); 
-        currentIssuer.issuer.display = value;
-        practitionerUpdate.qualification = [currentIssuer];
+      case "email":
+        set(formData, 'email', textValue)
+        break;        
+      case "qualificationIssuer":
+        set(formData, 'qualificationIssuer', textValue)
         break;
-      case "qualificationId":
-        var currentCredential = {};
-        if(get(practitionerUpdate, 'qualification[0].identifier[0]')){
-          currentCredential = get(practitionerUpdate, 'qualification[0].identifier[0]');
-        }
-        practitionerUpdate.qualification[0].identifier = [currentCredential];
+      case "qualificationIdentifier":
+        set(formData, 'qualificationIdentifier', textValue)
+        break;
+      case "qualificationCode":
+        set(formData, 'qualificationCode', textValue)
         break;
       case "qualificationStart":
-        var currentCredential = get(practitionerUpdate, 'qualification[0].identifier[0]');
-        currentCredential.period.start = value;
-        practitionerUpdate.qualification[0].identifier = [currentCredential];
+        set(formData, 'qualificationStart', )
         break;
       case "qualificationEnd":
-        var currentCredential = get(practitionerUpdate, 'qualification[0].identifier[0]');
-        currentCredential.period.end = value;
-        practitionerUpdate.qualification[0].identifier = [currentCredential];
+        set(formData, 'qualificationEnd', textValue)
         break;
-      default:
-
+      case "text":
+        set(formData, 'text', textValue)
+        break;
+      case "city":
+        set(formData, 'city', textValue)
+        break;
+      case "state":
+        set(formData, 'state', textValue)
+        break;
+      case "postalCode":
+        set(formData, 'postalCode', textValue)
+        break;
     }
-    if(process.env.NODE_ENV === "test") console.log("practitionerUpdate", practitionerUpdate);
 
-    Session.set('practitionerUpsert', practitionerUpdate);
+    if(process.env.NODE_ENV === "test") console.log("formData", formData);
+    return formData;
+  }
+  updatePractitioner(practitionerData, field, textValue){
+    if(process.env.NODE_ENV === "test") console.log("PatientDetail.updatePractitioner", practitionerData, field, textValue);
+
+    let telecomArray = get(practitionerData, 'telecom');
+
+    switch (field) {
+      case "name":
+        set(practitionerData, 'name.text', textValue)
+        break;
+        case "phone":
+        telecomArray.forEach(function(telecom){
+          if(telecom.system === 'phone'){
+            telecom.value = textValue
+          } 
+        })
+        set(practitionerData, 'telecom', telecomArray)
+        break;
+      case "email":
+        telecomArray.forEach(function(telecom){
+          if(telecom.system === 'email'){
+            telecom.value = textValue
+          } 
+        })
+        set(practitionerData, 'telecom', telecomArray)
+        break;      
+      case "qualificationIssuer":
+        set(practitionerData, 'qualification[0].issuer.display', textValue)
+        break;
+      case "qualificationIdentifier":
+        set(practitionerData, 'qualification[0].identifier', textValue)
+        break;
+      case "qualificationCode":
+        set(practitionerData, 'qualification[0].code.coding[0].code', textValue)
+        break;
+      case "qualificationStart":
+        set(practitionerData, 'qualification[0].period.start', moment(textValue))
+        break;
+      case "qualificationEnd":
+        set(practitionerData, 'qualification[0].period.end', moment(textValue))
+        break;
+      case "text":
+        set(practitionerData, 'address[0].text', textValue)
+        break;
+      case "city":
+        set(practitionerData, 'address[0].city', textValue)
+        break;
+      case "state":
+        set(practitionerData, 'address[0].state', textValue)
+        break;
+      case "postalCode":
+        set(practitionerData, 'address[0].postalCode', textValue)
+        break;
+    }
+    return practitionerData;
   }
 
+  changeState(field, event, textValue){
 
+    if(process.env.NODE_ENV === "test") console.log("   ");
+    if(process.env.NODE_ENV === "test") console.log("PractitionerDetail.changeState", field, textValue);
+    if(process.env.NODE_ENV === "test") console.log("this.state", this.state);
 
-  // this could be a mixin
+    let formData = Object.assign({}, this.state.form);
+    let practitionerData = Object.assign({}, this.state.practitioner);
+
+    formData = this.updateFormData(formData, field, textValue);
+    practitionerData = this.updatePractitioner(practitionerData, field, textValue);
+
+    if(process.env.NODE_ENV === "test") console.log("practitionerData", practitionerData);
+    if(process.env.NODE_ENV === "test") console.log("formData", formData);
+
+    this.setState({practitioner: practitionerData})
+    this.setState({form: formData})
+  }
+
   handleSaveButton(){
-    let practitionerUpdate = Session.get('practitionerUpsert', practitionerUpdate);
+    if(process.env.NODE_ENV === "test") console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&&')
+    console.log('Saving a new Practitioner...', this.state)
 
-    if(process.env.NODE_ENV === "test") console.log("handleSaveButton()");
+    let self = this;
+    let fhirPractitionerData = Object.assign({}, this.state.practitioner);
+
+    if(process.env.NODE_ENV === "test") console.log('fhirPractitionerData', fhirPractitionerData);
 
 
-    if (Session.get('selectedPractitioner')) {
-      if(process.env.NODE_ENV === "test") console.log("Updating practitioner...");
+    let practitionerValidator = PractitionerSchema.newContext();
+    practitionerValidator.validate(fhirPractitionerData)
 
-      delete practitionerUpdate._id;
+    console.log('IsValid: ', practitionerValidator.isValid())
+    // console.log('ValidationErrors: ', practitionerValidator.validationErrors());
 
-      // not sure why we're having to respecify this; fix for a bug elsewhere
-      practitionerUpdate.resourceType = 'Practitioner';
 
-      PractitionerSchema.clean(practitionerUpdate);
+    if (this.state.practitionerId) {
+      if(process.env.NODE_ENV === "test") console.log("Updating Practitioner...");
 
-      if(process.env.NODE_ENV === "test") console.log("practitionerUpdate", practitionerUpdate);
+      delete fhirPractitionerData._id;
 
-      Practitioners.update({_id: Session.get('selectedPractitioner')}, {$set: practitionerUpdate }, function(error, result){
+      if(process.env.NODE_ENV === "test") console.log("fhirPractitionerData", fhirPractitionerData);
+
+      Practitioners.update({_id: this.state.practitionerId}, {$set: fhirPractitionerData }, {
+        validate: false, 
+        filter: false, 
+        removeEmptyStrings: false
+      }, function(error, result){
         if (error) {
           if(process.env.NODE_ENV === "test") console.log("Practitioners.update[error]", error);
           Bert.alert(error.reason, 'danger');
         } else {
           Bert.alert('Practitioner added!', 'success');
-          Session.set('practitionerUpdate', defaultPractitioner);
-          Session.set('practitionerUpsert', defaultPractitioner);
           Session.set('practitionerPageTabIndex', 1);
         }
         if (result) {
-          HipaaLogger.logEvent({eventType: "update", userId: Meteor.userId(), userName: Meteor.user().fullName(), collectionName: "Practitioners", recordId: Session.get('selectedPractitioner')});
+          HipaaLogger.logEvent({eventType: "update", userId: Meteor.userId(), userName: Meteor.user().fullName(), collectionName: "Practitioners", recordId: self.state.practitionerId});
         }
       });
     } else {
-      if(process.env.NODE_ENV === "test") console.log("Creating a new practitioner...", practitionerUpdate);
+      if(process.env.NODE_ENV === "test") console.log("Creating a new practitioner...", fhirPractitionerData);
 
-      Practitioners.insert(practitionerUpdate, function(error, result) {
+      Practitioners.insert(fhirPractitionerData, {
+        validate: false, 
+        filter: false, 
+        removeEmptyStrings: false
+      }, function(error, result) {
         if (error) {
           if(process.env.NODE_ENV === "test") console.log("Practitioners.insert[error]", error);
           Bert.alert(error.reason, 'danger');
         } else {
           Bert.alert('Practitioner added!', 'success');
           Session.set('practitionerPageTabIndex', 1);
-          Session.set('selectedPractitioner', false);
-          Session.set('practitionerUpsert', false);
         }
         if (result) {
-          HipaaLogger.logEvent({eventType: "create", userId: Meteor.userId(), userName: Meteor.user().fullName(), collectionName: "Practitioners", recordId: result});
+          HipaaLogger.logEvent({eventType: "create", userId: Meteor.userId(), userName: Meteor.user().fullName(), collectionName: "Practitioners", recordId: self.state.practitionerId});
         }
       });
     }
@@ -399,22 +540,28 @@ export default class PractitionerDetail extends React.Component {
   }
 
   handleDeleteButton(){
-    Practitioners.remove({_id: Session.get('selectedPractitioner')}, function(error, result){
+    let self = this;
+    Practitioners.remove({_id: this.state.practitionerId}, function(error, result){
       if (error) {
         if(process.env.NODE_ENV === "test") console.log("Practitioners.insert[error]", error);
         Bert.alert(error.reason, 'danger');
       } else {
         Bert.alert('Practitioner removed!', 'success');
-        Session.set('practitionerUpdate', defaultPractitioner);
-        Session.set('practitionerUpsert', defaultPractitioner);
         Session.set('practitionerPageTabIndex', 1);
       }
       if (result) {
-        HipaaLogger.logEvent({eventType: "delete", userId: Meteor.userId(), userName: Meteor.user().fullName(), collectionName: "Practitioners", recordId: Session.get('selectedPractitioner')});
+        HipaaLogger.logEvent({eventType: "delete", userId: Meteor.userId(), userName: Meteor.user().fullName(), collectionName: "Practitioners", recordId: self.state.practitionerId});
       }
     });
   }
 }
 
+PractitionerDetail.propTypes = {
+  id: PropTypes.string,
+  fhirVersion: PropTypes.string,
+  practitionerId: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+  practitioner: PropTypes.oneOfType([PropTypes.object, PropTypes.bool])
+};
 
 ReactMixin(PractitionerDetail.prototype, ReactMeteorData);
+export default PractitionerDetail;
