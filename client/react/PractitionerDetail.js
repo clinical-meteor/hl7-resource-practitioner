@@ -497,8 +497,8 @@ export class PractitionerDetail extends React.Component {
       if(process.env.NODE_ENV === "test") console.log("fhirPractitionerData", fhirPractitionerData);
 
       Practitioners.update({_id: this.state.practitionerId}, {$set: fhirPractitionerData }, {
-        validate: false, 
-        filter: false, 
+        validate: get(Meteor, 'settings.public.defaults.schemas.validate', false), 
+        filter: get(Meteor, 'settings.public.defaults.schemas.filter', false), 
         removeEmptyStrings: false
       }, function(error, result){
         if (error) {
@@ -516,8 +516,8 @@ export class PractitionerDetail extends React.Component {
       if(process.env.NODE_ENV === "test") console.log("Creating a new practitioner...", fhirPractitionerData);
 
       Practitioners.insert(fhirPractitionerData, {
-        validate: false, 
-        filter: false, 
+        validate: get(Meteor, 'settings.public.defaults.schemas.validate', false), 
+        filter: get(Meteor, 'settings.public.defaults.schemas.filter', false), 
         removeEmptyStrings: false
       }, function(error, result) {
         if (error) {
