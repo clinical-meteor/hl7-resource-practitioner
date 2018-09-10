@@ -486,7 +486,6 @@ export class PractitionerDetail extends React.Component {
     practitionerValidator.validate(fhirPractitionerData)
 
     console.log('IsValid: ', practitionerValidator.isValid())
-    // console.log('ValidationErrors: ', practitionerValidator.validationErrors());
 
 
     if (this.state.practitionerId) {
@@ -496,11 +495,7 @@ export class PractitionerDetail extends React.Component {
 
       if(process.env.NODE_ENV === "test") console.log("fhirPractitionerData", fhirPractitionerData);
 
-      Practitioners.update({_id: this.state.practitionerId}, {$set: fhirPractitionerData }, {
-        validate: get(Meteor, 'settings.public.defaults.schemas.validate', false), 
-        filter: get(Meteor, 'settings.public.defaults.schemas.filter', false), 
-        removeEmptyStrings: false
-      }, function(error, result){
+      Practitioners._collection.update({_id: this.state.practitionerId}, {$set: fhirPractitionerData }, function(error, result){
         if (error) {
           if(process.env.NODE_ENV === "test") console.log("Practitioners.update[error]", error);
           Bert.alert(error.reason, 'danger');
@@ -515,11 +510,7 @@ export class PractitionerDetail extends React.Component {
     } else {
       if(process.env.NODE_ENV === "test") console.log("Creating a new practitioner...", fhirPractitionerData);
 
-      Practitioners.insert(fhirPractitionerData, {
-        validate: get(Meteor, 'settings.public.defaults.schemas.validate', false), 
-        filter: get(Meteor, 'settings.public.defaults.schemas.filter', false), 
-        removeEmptyStrings: false
-      }, function(error, result) {
+      Practitioners._collection.insert(fhirPractitionerData, function(error, result) {
         if (error) {
           if(process.env.NODE_ENV === "test") console.log("Practitioners.insert[error]", error);
           Bert.alert(error.reason, 'danger');
@@ -534,7 +525,6 @@ export class PractitionerDetail extends React.Component {
     }
   }
 
-  // this could be a mixin
   handleCancelButton(){
     Session.set('practitionerPageTabIndex', 1);
   }
