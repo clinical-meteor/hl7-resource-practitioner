@@ -531,7 +531,7 @@ export class PractitionerDetail extends React.Component {
 
   handleDeleteButton(){
     let self = this;
-    Practitioners.remove({_id: this.state.practitionerId}, function(error, result){
+    Practitioners._collection.remove({_id: this.state.practitionerId}, function(error, result){
       if (error) {
         if(process.env.NODE_ENV === "test") console.log("Practitioners.insert[error]", error);
         Bert.alert(error.reason, 'danger');
