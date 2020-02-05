@@ -1,6 +1,6 @@
 Package.describe({
   name: 'clinical:hl7-resource-practitioner',
-  version: '3.3.11',
+  version: '3.4.1',
   summary: 'HL7 FHIR Resource - Practitioner',
   git: 'https://github.com/clinical-meteor/hl7-resource-practitioner',
   documentation: 'README.md'
@@ -9,26 +9,23 @@ Package.describe({
 Package.onUse(function (api) {
   api.versionsFrom('1.1.0.3');
 
-  api.use('meteor-platform');
+  api.use('meteor-base@1.4.0');
   api.use('mongo');
 
   api.use('aldeed:collection2@3.0.0');
-  api.use('clinical:hl7-resource-datatypes@4.0.0');
-  api.use('clinical:hl7-resource-bundle@1.4.0');
+  api.use('clinical:hl7-resource-datatypes@4.0.5');
+  api.use('clinical:hl7-resource-bundle@1.6.3');
 
   api.use('simple:json-routes@2.1.0');
-  api.use('momentjs:moment@2.17.1');
-  api.use('ecmascript@0.9.0');
+  api.use('ecmascript@0.13.0');
   api.use('session');
   api.use('http');
   api.use('react-meteor-data@0.2.15');
 
-  api.use('clinical:glass-ui@2.4.7');
   api.use('clinical:extended-api@2.4.0');
   api.use('clinical:base-model@1.4.0');
   api.use('clinical:user-model@1.6.2');
   api.use('matb33:collection-hooks@0.7.15');
-  api.use('clinical:alert@2.1.3');
   
   api.imply('clinical:user-model');
 

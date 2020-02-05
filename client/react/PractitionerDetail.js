@@ -1,9 +1,13 @@
-import { Card, CardActions, CardText, CardTitle, CardHeader } from 'material-ui/Card';
-import { Col, Grid, Row } from 'react-bootstrap';
-
-import RaisedButton from 'material-ui/RaisedButton';
-import TextField from 'material-ui/TextField';
-import Paper from 'material-ui/Paper';
+import { 
+  Grid,
+  Button, 
+  CardActions, 
+  CardContent, 
+  CardHeader,
+  TextField,
+  Paper
+} from '@material-ui/core';
+import { StyledCard, PageCanvas } from 'material-fhir-ui';
 
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session';
@@ -155,165 +159,165 @@ export class PractitionerDetail extends React.Component {
 
     return (
       <div id={this.props.id} className="practitionerDetail">
-        <CardText>
-          <Row>
-            <Col md={6}>
+        <CardContent>
+          <Grid container spacing={3}>
+            <Grid item md={6}>  
               <TextField
                 id='practitionerNameInput'
-                ref='name'
+                // ref='name'
                 name='name'
                 type='text'
-                floatingLabelText='name'
-                floatingLabelFixed={true}
+                label='name'
+                //floatingLabelFixed={true}
                 hintText='Alison Camron'
                 value={ get(formData, 'name') }
                 onChange={ this.changeState.bind(this, 'name')}
                 fullWidth
                 /><br/>
-            </Col>
-            <Col md={3}>
+            </Grid>
+            <Grid item md={3}>
               <TextField
                 id='emailInput'
-                ref='email'
+                // ref='email'
                 name='email'
                 type='email'
-                floatingLabelText='Email'
-                floatingLabelFixed={true}
+                label='Email'
+                //floatingLabelFixed={true}
                 hintText='drcamron@symptomatic.io'
                 value={ get(formData, 'email') }
                 onChange={ this.changeState.bind(this, 'email')}
                 fullWidth
                 /><br/>
-            </Col>
-            <Col md={3}>
+            </Grid>
+            <Grid item md={3}>
               <TextField
                 id='phoneInput'
-                ref='phone'
+                // ref='phone'
                 name='phone'
                 type='phone'
-                floatingLabelText='Phone'
-                floatingLabelFixed={true}
+                label='Phone'
+                //floatingLabelFixed={true}
                 hintText='773-555-1010'
                 value={ get(formData, 'phone') }
                 onChange={ this.changeState.bind(this, 'phone')}
                 fullWidth
                 /><br/>
-            </Col>
-          </Row>
+            </Grid>
+          </Grid>
 
-          <Row>
-            <Col md={6}>
+          <Grid container spacing={3}>
+            <Grid item md={6}>
               <TextField
                 id='textInput'
-                ref='text'
+                // ref='text'
                 name='text'
-                floatingLabelText='Address'
+                label='Address'
                 value={ get(formData, 'text') }
                 onChange={ this.changeState.bind(this, 'text')}
-                floatingLabelFixed={true}
+                //floatingLabelFixed={true}
                 hintText='South Side'
                 fullWidth
                 /><br/>
-            </Col>
-            <Col md={2}>
+            </Grid>
+            <Grid item md={2}>
               <TextField
                 id='cityInput'
-                ref='city'
+                // ref='city'
                 name='city'
-                floatingLabelText='City'
+                label='City'
                 value={ get(formData, 'city') }
                 onChange={ this.changeState.bind(this, 'city')}
                 hintText='Chicago'
-                floatingLabelFixed={true}
+                //floatingLabelFixed={true}
                 fullWidth
                 /><br/>
-            </Col>
-            <Col md={2}>
+            </Grid>
+            <Grid item md={2}>
               <TextField
                 id='stateInput'
-                ref='state'
+                // ref='state'
                 name='state'
-                floatingLabelText='State'
+                label='State'
                 value={ get(formData, 'state') }
                 onChange={ this.changeState.bind(this, 'state')}
-                floatingLabelFixed={true}
+                //floatingLabelFixed={true}
                 hintText='Illinois'
                 fullWidth
                 /><br/>
-            </Col>
-            <Col md={2}>
+            </Grid>
+            <Grid item md={2}>
               <TextField
                 id='postalCodeInput'
-                ref='postalCode'
+                // ref='postalCode'
                 name='postalCode'
-                floatingLabelText='Postal Code'
+                label='Postal Code'
                 value={ get(formData, 'postalCode') }
                 onChange={ this.changeState.bind(this, 'postalCode')}
-                floatingLabelFixed={true}
+                //floatingLabelFixed={true}
                 hintText='60637'
                 fullWidth
                 /><br/>
-            </Col>
-          </Row>
+            </Grid>
+          </Grid>
 
-                    <Row>
-            <Col md={4}>
+          <Grid container spacing={3}>
+            <Grid item md={4}>
               <TextField
                 id='qualificationIssuerInput'
-                ref='qualificationIssuer'
+                // ref='qualificationIssuer'
                 name='qualificationIssuer'
                 type='text'
-                floatingLabelText='Qualification Issuer'
-                floatingLabelFixed={true}
+                label='Qualification Issuer'
+                //floatingLabelFixed={true}
                 value={ get(formData, 'qualificationIssuer') }
                 onChange={ this.changeState.bind(this, 'qualificationIssuer')}
                 hintText='American College of Emergency Physicians'
                 fullWidth
                 /><br/>
-            </Col>
-            <Col md={2}>
+            </Grid>
+            <Grid item md={2}>
               <TextField
                 id='qualificationCodeInput'
-                ref='qualificationCode'
+                // ref='qualificationCode'
                 name='qualificationCode'
                 type='text'
-                floatingLabelText='Qualification Code'
-                floatingLabelFixed={true}
+                label='Qualification Code'
+                //floatingLabelFixed={true}
                 value={ get(formData, 'qualificationCode') }
                 onChange={ this.changeState.bind(this, 'qualificationCode')}
                 hintText='ACEP-10792866'
                 fullWidth
                 /><br/>
-            </Col>
-            <Col md={3}>
+            </Grid>
+            <Grid item md={3}>
               <TextField
                 id='qualificationStartInput'
-                ref='qualificationStart'
+                // ref='qualificationStart'
                 name='qualificationStart'
                 type='date'
-                floatingLabelText='Start'
-                floatingLabelFixed={true}
+                label='Start'
+                //floatingLabelFixed={true}
                 value={ get(formData, 'qualificationStart') }
                 onChange={ this.changeState.bind(this, 'qualificationStart')}
                 fullWidth
                 /><br/>
-            </Col>
-            <Col md={3}>
+            </Grid>
+            <Grid item md={3}>
               <TextField
                 id='qualificationEndInput'
-                ref='qualificationEnd'
+                // ref='qualificationEnd'
                 name='qualificationEnd'
                 type='date'
-                floatingLabelText='End'
-                floatingLabelFixed={true}
+                label='End'
+                //floatingLabelFixed={true}
                 value={ get(formData, 'qualificationEnd') }
                 onChange={ this.changeState.bind(this, 'qualificationEnd')}
                 fullWidth
                 /><br/>
-            </Col>
-          </Row>
+            </Grid>
+          </Grid>
           { this.displayQualifications(this.data.practitionerId) }     
-        </CardText>
+        </CardContent>
         <CardActions>
           { this.determineButtons(this.data.practitionerId) }
         </CardActions>
@@ -326,10 +330,10 @@ export class PractitionerDetail extends React.Component {
       return (
         <Row>
           <Paper zDepth={2} style={{borderLeft: 'solid gray 3px', marginLeft: '60px', marginRight: '20px',marginTop: '40px', marginBottom: '40px'}}>
-            <CardTitle title='Qualifications & Credentials' />
-            <CardText>
+            <CardHeader title='Qualifications & Credentials' />
+            <CardContent>
               <PractitionersTable showBarcodes={false} data={ this.data.blockchainData }/>
-            </CardText>
+            </CardContent>
           </Paper>
         </Row>
       );
@@ -339,13 +343,13 @@ export class PractitionerDetail extends React.Component {
     if (practitionerId) {
       return (
         <div>
-          <RaisedButton id="updatePractitionerButton" className="savePractitionerButton" primary={true} label="Save" onClick={this.handleSaveButton.bind(this)} style={{marginRight: '20px'}} />
-          <RaisedButton id="deletePractitionerButton" label="Delete" onClick={this.handleDeleteButton.bind(this)} />
+          <Button id="updatePractitionerButton" className="savePractitionerButton" primary={true} onClick={this.handleSaveButton.bind(this)} style={{marginRight: '20px'}} >Save</Button>
+          <Button id="deletePractitionerButton" onClick={this.handleDeleteButton.bind(this)} >Delete</Button>
         </div>
       );
     } else {
       return(
-        <RaisedButton id="savePractitionerButton" className="savePractitionerButton" primary={true} label="Save" onClick={this.handleSaveButton.bind(this)} />
+        <Button id="savePractitionerButton" className="savePractitionerButton" primary={true} onClick={this.handleSaveButton.bind(this)} >Save</Button>
       );
     }
   }
@@ -498,9 +502,9 @@ export class PractitionerDetail extends React.Component {
       Practitioners._collection.update({_id: this.state.practitionerId}, {$set: fhirPractitionerData }, function(error, result){
         if (error) {
           if(process.env.NODE_ENV === "test") console.log("Practitioners.update[error]", error);
-          Bert.alert(error.reason, 'danger');
+          // Bert.alert(error.reason, 'danger');
         } else {
-          Bert.alert('Practitioner added!', 'success');
+          // Bert.alert('Practitioner added!', 'success');
           Session.set('practitionerPageTabIndex', 1);
         }
         if (result) {
@@ -513,9 +517,9 @@ export class PractitionerDetail extends React.Component {
       Practitioners._collection.insert(fhirPractitionerData, function(error, result) {
         if (error) {
           if(process.env.NODE_ENV === "test") console.log("Practitioners.insert[error]", error);
-          Bert.alert(error.reason, 'danger');
+          // Bert.alert(error.reason, 'danger');
         } else {
-          Bert.alert('Practitioner added!', 'success');
+          // Bert.alert('Practitioner added!', 'success');
           Session.set('practitionerPageTabIndex', 1);
         }
         if (result) {
@@ -534,9 +538,9 @@ export class PractitionerDetail extends React.Component {
     Practitioners._collection.remove({_id: this.state.practitionerId}, function(error, result){
       if (error) {
         if(process.env.NODE_ENV === "test") console.log("Practitioners.insert[error]", error);
-        Bert.alert(error.reason, 'danger');
+        // Bert.alert(error.reason, 'danger');
       } else {
-        Bert.alert('Practitioner removed!', 'success');
+        // Bert.alert('Practitioner removed!', 'success');
         Session.set('practitionerPageTabIndex', 1);
       }
       if (result) {

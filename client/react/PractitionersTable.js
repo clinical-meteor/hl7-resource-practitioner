@@ -1,10 +1,16 @@
-import Avatar from 'material-ui/Avatar';
+
+import { 
+  Checkbox, 
+  Table, 
+  TableRow, 
+  TableCell,
+  TableBody
+} from '@material-ui/core';
+
 import React from 'react';
 import { ReactMeteorData } from 'meteor/react-meteor-data';
 import ReactMixin from 'react-mixin';
-import { Table } from 'react-bootstrap';
 import { get } from 'lodash';
-import { Glass } from 'meteor/clinical:glass-ui';
 
 Session.setDefault('selectedPractitioner', false);
 
@@ -149,9 +155,9 @@ export class PractitionersTable extends React.Component {
 
     let data = {
       style: {
-        row: Glass.darkroom({
-          opacity: Session.get('globalOpacity')
-        })
+        // row: Glass.darkroom({
+        //   opacity: Session.get('globalOpacity')
+        // })
       },
       selected: [],
       practitioners: []
@@ -197,40 +203,40 @@ export class PractitionersTable extends React.Component {
     //console.log('this.data.practitioners', this.data.practitioners)
     for (var i = 0; i < this.data.practitioners.length; i++) {
       tableRows.push(
-      <tr className='practitionerRow' key={i} style={this.data.style.row} onClick={ this.rowClick.bind('this', this.data.practitioners[i]._id) }>
-        <td className="name">{this.data.practitioners[i].name}</td>
-        <td className="phone">{this.data.practitioners[i].phone}</td>
-        <td className="email">{this.data.practitioners[i].email}</td>
-        <td className="issuer">{this.data.practitioners[i].issuer}</td>
-        <td className="qualificationCode">{this.data.practitioners[i].qualificationCode}</td>
-        <td className="qualificationStart">{this.data.practitioners[i].qualificationStart}</td>
-        <td className="qualificationEnd">{this.data.practitioners[i].qualificationEnd}</td>
-        <td className="city">{this.data.practitioners[i].city}</td>
-        <td className="state">{this.data.practitioners[i].state}</td>
-        {/*<td className="barcode">{this.data.practitioners[i]._id}</td>*/}
-      </tr>);
+      <TableRow className='practitionerRow' key={i} style={this.data.style.row} onClick={ this.rowClick.bind('this', this.data.practitioners[i]._id) }>
+        <TableCell className="name">{this.data.practitioners[i].name}</TableCell>
+        <TableCell className="phone">{this.data.practitioners[i].phone}</TableCell>
+        <TableCell className="email">{this.data.practitioners[i].email}</TableCell>
+        <TableCell className="issuer">{this.data.practitioners[i].issuer}</TableCell>
+        <TableCell className="qualificationCode">{this.data.practitioners[i].qualificationCode}</TableCell>
+        <TableCell className="qualificationStart">{this.data.practitioners[i].qualificationStart}</TableCell>
+        <TableCell className="qualificationEnd">{this.data.practitioners[i].qualificationEnd}</TableCell>
+        <TableCell className="city">{this.data.practitioners[i].city}</TableCell>
+        <TableCell className="state">{this.data.practitioners[i].state}</TableCell>
+        {/*<TableCell className="barcode">{this.data.practitioners[i]._id}</TableCell>*/}
+      </TableRow>);
     }
 
 
     return(
       <Table id="practitionersTable" hover >
-        <thead>
-          <tr>
-            <th className="name">Name</th>
-            <th className="phone">Phone</th>
-            <th className="email">Use</th>
-            <th className="issuer">Issuer</th>
-            <th className="qualificationCode">Credential</th>
-            <th className="qualificationStart">Start</th>
-            <th className="qualificationEnd">End</th>
-            <th className="city">City</th>
-            <th className="state">State</th>
-            {/*<th className="barcode">_id</th>*/}
-          </tr>
-        </thead>
-        <tbody>
+        <TableHead>
+          <TableRow>
+            <TableCell className="name">Name</TableCell>
+            <TableCell className="phone">Phone</TableCell>
+            <TableCell className="email">Use</TableCell>
+            <TableCell className="issuer">Issuer</TableCell>
+            <TableCell className="qualificationCode">Credential</TableCell>
+            <TableCell className="qualificationStart">Start</TableCell>
+            <TableCell className="qualificationEnd">End</TableCell>
+            <TableCell className="city">City</TableCell>
+            <TableCell className="state">State</TableCell>
+            {/*<TableCell className="barcode">_id</TableCell>*/}
+          </TableRow>
+        </TableHead>
+        <TableBody>
           { tableRows }
-        </tbody>
+        </TableBody>
       </Table>
 
     );

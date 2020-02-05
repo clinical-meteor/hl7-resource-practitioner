@@ -1,7 +1,19 @@
-import { CardText, CardTitle } from 'material-ui/Card';
-import { Tab, Tabs } from 'material-ui/Tabs';
-import { Paper } from 'material-ui/Paper';
-import { GlassCard, VerticalCanvas, Glass } from 'meteor/clinical:glass-ui';
+import { 
+  CssBaseline,
+  Grid, 
+  Container,
+  Divider,
+  Card,
+  CardHeader,
+  CardContent,
+  Button,
+  Tab, 
+  Tabs,
+  Typography,
+  Box
+} from '@material-ui/core';
+import { StyledCard, PageCanvas } from 'material-fhir-ui';
+
 
 import PractitionerDetail  from './PractitionerDetail';
 import PractitionersTable  from './PractitionersTable';
@@ -17,6 +29,29 @@ import { ReactMeteorData } from 'meteor/react-meteor-data';
 import ReactMixin  from 'react-mixin';
 
 import { get } from 'lodash';
+
+//=============================================================================================================================================
+// TABS
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <Typography
+      component="div"
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      <Box p={3}>{children}</Box>
+    </Typography>
+  );
+}
+
+//=============================================================================================================================================
+// COMPONENT
 
 Session.setDefault('practitionerPageTabIndex', 1);
 Session.setDefault('practitionerSearchFilter', '');
@@ -48,9 +83,9 @@ export class PractitionersPage extends React.Component {
       data.selectedPractitioner = false;
     }
 
-    data.style = Glass.blur(data.style);
-    data.style.appbar = Glass.darkroom(data.style.appbar);
-    data.style.tab = Glass.darkroom(data.style.tab);
+    // data.style = Glass.blur(data.style);
+    // data.style.appbar = Glass.darkroom(data.style.appbar);
+    // data.style.tab = Glass.darkroom(data.style.tab);
 
     if(process.env.NODE_ENV === "test") console.log("PractitionersPage[data]", data);
     return data;
@@ -78,42 +113,33 @@ export class PractitionersPage extends React.Component {
     }
     return (
       <div id="practitionersPage">
-        <VerticalCanvas>
-          <GlassCard height='auto'>
-            <CardTitle
+        <StyledCard height="auto" scrollable={true} margin={20} headerHeight={headerHeight} >
+          
               title="Practitioners"
             />
-            <CardText>
-              <Tabs id="practitionersPageTabs" default value={this.data.tabIndex} onChange={this.handleTabChange} initialSelectedIndex={1} style={{borderRight: 'none'}} >
-                <Tab className="newPractitionerTab" label='New' style={this.data.style.tab} onActive={ this.onNewTab } value={0} >
-                  <PractitionerDetail 
-                    id='newPractitioner'
-                    fhirVersion={this.data.fhirVersion}
-                    practitioner={ this.data.selectedPractitioner }
-                    practitionerId={ this.data.selectedPractitionerId } />  
-                </Tab>
-                <Tab className="practitionerListTab" label='Practitioners' onActive={this.handleActive} style={this.data.style.tab} value={1}>
-                  <PractitionersTable 
-                    fhirVersion={this.data.fhirVersion} 
-                    showBarcodes={false} />
-                 </Tab>
-                 <Tab className="practitionerDetailsTab" label='Detail' onActive={this.handleActive} style={this.data.style.tab} value={2}>
-                  <PractitionerDetail 
-                    id='practitionerDetails' 
-                    practitioner={ this.data.selectedPractitioner }
-                    practitionerId={ this.data.selectedPractitionerId } />  
-                </Tab>
-                { blockchainTab }
+            <CardContent>
+              <Tabs id="practitionersPageTabs" value={this.data.tabIndex} onChange={this.handleTabChange } aria-label="simple tabs example">
+                <Tab label="Practitioners" value={0} />
+                <Tab label="New" value={1} />
               </Tabs>
-            </CardText>
-          </GlassCard>
-        </VerticalCanvas>
+              <TabPanel >
+                <PractitionersTable 
+                  fhirVersion={this.data.fhirVersion} 
+                  showBarcodes={false} />
+              </TabPanel>              
+              <TabPanel >
+                <PractitionerDetail 
+                  id='practitionerDetails' 
+                  practitioner={ this.data.selectedPractitioner }
+                  practitionerId={ this.data.selectedPractitionerId } />  
+              </TabPanel>              
+            </CardContent>
+            { blockchainTab }
+         </StyledCard>
       </div>
     );
   }
 }
 
-
 ReactMixin(PractitionersPage.prototype, ReactMeteorData);
-
 export default PractitionersPage;
